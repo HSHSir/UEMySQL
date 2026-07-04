@@ -34,6 +34,8 @@
 !*.def
 !*.exp
 !*.manifest
+!*.lib
+!*.dll
 
 # ISPC files
 !*.ispc
@@ -204,6 +206,9 @@ Content/
 # Ignore intermediate folders
 Intermediate/
 obj/
+
+# Ignore plugin Binaries (compilation artifacts)
+Binaries/
 
 # Ignore any saved local files
 Saved/
