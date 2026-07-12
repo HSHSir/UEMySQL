@@ -29,7 +29,7 @@ DECLARE_DELEGATE_OneParam(FMySQLResultDelegate, const FMySQLResult&);
  *           if (R.bSuccess) { for (auto& Row : R.Rows) { ... } }
  *       }));
  */
-class UEMYSQL_API FMySQLAsyncExecutor : public TSharedFromThis<FMySQLAsyncExecutor, ESPMode::ThreadSafe>
+class UEMYSQLCORE_API FMySQLAsyncExecutor : public TSharedFromThis<FMySQLAsyncExecutor, ESPMode::ThreadSafe>
 {
 public:
 	FMySQLAsyncExecutor();

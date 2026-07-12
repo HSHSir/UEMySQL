@@ -21,4 +21,4 @@ ThirdParty/MySQL/
 
 注意：必须使用 64 位版本，与 UE4 Win64 保持一致。
 
-详细图文说明见 `../Documentation/UEMySQL使用文档.html`。
+详细图文说明见 `Documentation/UEMySQL使用文档.html`。

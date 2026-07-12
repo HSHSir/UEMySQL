@@ -14,7 +14,7 @@ public:
 
 	static inline FUEMySQLModule& Get()
 	{
-		return FModuleManager::LoadModuleChecked<FUEMySQLModule>("UEMySQL");
+		return FModuleManager::LoadModuleChecked<FUEMySQLModule>("UEMySQLCore");
 	}
 
 	/** libmysql.dll 是否已成功加载 */

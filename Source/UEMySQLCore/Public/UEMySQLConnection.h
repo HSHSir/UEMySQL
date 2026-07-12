@@ -17,7 +17,7 @@ typedef struct st_mysql MYSQL;
  * mysql_set_character_set 双重设置字符集为 utf8mb4；所有 FString 与
  * C 字符串之间通过 FTCHARToUTF8 / UTF8_TO_TCHAR 转换，全程 UTF-8。
  */
-class UEMYSQL_API FMySQLConnection
+class UEMYSQLCORE_API FMySQLConnection
 {
 public:
 	FMySQLConnection();

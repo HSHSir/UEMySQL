@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UEMySQL 插件使用文档 — UE4.27 MySQL 连接</title>
+<style>:root{--bg-primary:#0d1117;--bg-secondary:#161b22;--bg-card:#1c2129;--bg-code:#0d1117;--bg-table-header:#1a2332;--bg-table-row-alt:#161b22;--border:#30363d;--text-primary:#e6edf3;--text-secondary:#8b949e;--text-muted:#6e7681;--accent:#58a6ff;--accent-dim:#1f6feb;--green:#3fb950;--orange:#d29922;--red:#f85149;--purple:#a371f7;--cyan:#39c5cf;--code-keyword:#ff7b72;--code-string:#a5d6ff;--code-comment:#8b949e;--code-function:#d2a8ff;--code-number:#a5d6ff;--code-type:#ffa657;--code-preprocessor:#7ee787;--scrollbar-thumb:#30363d;--scrollbar-track:#0d1117;--sidebar-width:280px}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;font-size:15px}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.75;overflow-x:hidden}::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:var(--scrollbar-track)}::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb);border-radius:4px}::-webkit-scrollbar-thumb:hover{background:#484f58}.sidebar{position:fixed;top:0;left:0;width:var(--sidebar-width);height:100vh;background:var(--bg-secondary);border-right:1px solid var(--border);overflow-y:auto;z-index:100;padding:24px 16px;box-shadow:2px 0 12px rgba(0,0,0,0.3)}.sidebar-header{padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:16px}.sidebar-header h1{font-size:1.15rem;font-weight:700;color:var(--accent);line-height:1.4}.sidebar-header .meta{font-size:0.8rem;color:var(--text-secondary);margin-top:8px}.sidebar-header .meta span{display:block;line-height:1.6}.sidebar nav ul{list-style:none}.sidebar nav ul li{margin-bottom:2px}.sidebar nav ul li a{display:block;padding:6px 12px;color:var(--text-secondary);text-decoration:none;border-radius:6px;font-size:0.88rem;transition:all 0.15s ease;border-left:2px solid transparent}.sidebar nav ul li a:hover{color:var(--text-primary);background:rgba(88,166,255,0.08);border-left-color:var(--accent-dim)}.sidebar nav ul li a.sub{padding-left:28px;font-size:0.82rem}.sidebar nav ul li a.sub-sub{padding-left:40px;font-size:0.78rem;color:var(--text-muted)}.sidebar nav .section-title{font-size:0.75rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;padding:12px 12px 6px;margin-top:8px}.main{margin-left:var(--sidebar-width);max-width:1000px;padding:48px 56px 120px}h1{font-size:2rem;font-weight:800;color:var(--accent);margin:0 0 8px}h2{font-size:1.5rem;font-weight:700;margin:48px 0 16px;padding-bottom:10px;border-bottom:1px solid var(--border);color:var(--text-primary)}h3{font-size:1.2rem;font-weight:600;margin:36px 0 12px;color:var(--text-primary)}h4{font-size:1.05rem;font-weight:600;margin:24px 0 10px;color:var(--text-secondary)}p{margin:0 0 14px;color:var(--text-secondary)}a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}strong{color:var(--text-primary);font-weight:600}code:not(pre code){background:var(--bg-card);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono','Fira Code','Cascadia Code','Consolas',monospace;font-size:0.88em;color:var(--code-string);border:1px solid var(--border)}blockquote{border-left:3px solid var(--accent-dim);margin:16px 0;padding:12px 18px;background:rgba(88,166,255,0.04);border-radius:0 6px 6px 0;color:var(--text-secondary);font-size:0.95rem}blockquote strong{color:var(--accent)}hr{border:none;border-top:1px solid var(--border);margin:32px 0}pre{background:var(--bg-code);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin:16px 0;overflow-x:auto;position:relative;box-shadow:inset 0 1px 0 rgba(255,255,255,0.03),0 2px 8px rgba(0,0,0,0.2)}pre code{font-family:'JetBrains Mono','Fira Code','Cascadia Code','Consolas',monospace;font-size:0.82rem;line-height:1.65;color:var(--text-primary);background:none;border:none;padding:0;display:block}.code-label{position:absolute;top:8px;right:14px;font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;font-family:'JetBrains Mono','Fira Code',monospace}.kw{color:var(--code-keyword);font-weight:600}.str{color:var(--code-string)}.cm{color:var(--code-comment);font-style:italic}.fn{color:var(--code-function)}.num{color:var(--code-number)}.tp{color:var(--code-type)}.pp{color:var(--code-preprocessor)}.op{color:var(--text-primary)}table{width:100%;border-collapse:separate;border-spacing:0;margin:20px 0;font-size:0.9rem;border-radius:8px;overflow:hidden;border:1px solid var(--border)}thead th{background:var(--bg-table-header);color:var(--text-primary);font-weight:600;text-align:left;padding:12px 16px;border-bottom:1px solid var(--border)}tbody td{padding:10px 16px;border-bottom:1px solid var(--border);color:var(--text-secondary)}tbody tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:var(--bg-table-row-alt)}tbody tr:hover{background:rgba(88,166,255,0.04)}.check{color:var(--green)}.cross{color:var(--red)}.step{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:18px 22px;margin:16px 0;border-left:3px solid var(--accent-dim)}.step h4{margin-top:0;color:var(--accent)}.step ol{padding-left:20px;color:var(--text-secondary)}.step ol li{margin-bottom:10px;line-height:1.7}.step-num{display:inline-block;background:var(--accent-dim);color:var(--text-primary);width:26px;height:26px;line-height:26px;text-align:center;border-radius:50%;font-weight:700;font-size:0.85rem;margin-right:8px}.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:600;letter-spacing:0.02em}.badge-pass{background:rgba(63,185,80,0.15);color:var(--green)}.badge-warn{background:rgba(210,153,34,0.15);color:var(--orange)}.badge-info{background:rgba(88,166,255,0.15);color:var(--accent)}details{margin:12px 0;border:1px solid var(--border);border-radius:8px;background:var(--bg-card);overflow:hidden}details summary{padding:12px 18px;cursor:pointer;font-weight:600;color:var(--text-primary);user-select:none;transition:background 0.15s;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\25B6';display:inline-block;width:18px;font-size:0.7rem;color:var(--text-muted);transition:transform 0.2s}details[open] summary::before{transform:rotate(90deg)}details summary:hover{background:rgba(88,166,255,0.05)}details .details-content{padding:4px 18px 18px}details .details-content pre{margin:8px 0;box-shadow:none}.to-top{position:fixed;bottom:28px;right:28px;z-index:200;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-secondary);cursor:pointer;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:all 0.2s;opacity:0.7}.to-top:hover{opacity:1;background:var(--accent-dim);color:white;border-color:var(--accent-dim)}@media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:24px 20px 80px}}@media print{.sidebar,.to-top{display:none}.main{margin-left:0;padding:0}body{background:white;color:black}pre{border:1px solid #ccc;background:#f5f5f5}table{border-color:#ccc}thead th{background:#e5e5e5;color:black}tbody td{color:#333;border-color:#ccc}}</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>🗄️ UEMySQL 插件<br>使用文档</h1>
+    <div class="meta">
+      <span>UE 4.27 · Win64</span>
+      <span>MySQL Connector/C 6.1</span>
+      <span>异步 · 连接池 · 防注入 · UTF-8</span>
+    </div>
+  </div>
+  <nav>
+    <ul>
+      <li class="section-title">概览</li>
+      <li><a href="#intro">一、插件简介</a></li>
+      <li><a href="#feature" class="sub">核心特性</a></li>
+      <li><a href="#structure" class="sub">目录结构</a></li>
+      <li class="section-title">安装</li>
+      <li><a href="#prepare">二、环境准备</a></li>
+      <li><a href="#download" class="sub">下载连接库</a></li>
+      <li><a href="#place" class="sub">放置 ThirdParty</a></li>
+      <li><a href="#build">三、编译与启用</a></li>
+      <li class="section-title">使用</li>
+      <li><a href="#api">四、API 参考</a></li>
+      <li><a href="#api-config" class="sub">配置结构体</a></li>
+      <li><a href="#api-result" class="sub">结果结构体</a></li>
+      <li><a href="#api-executor" class="sub">异步执行器</a></li>
+      <li><a href="#example">五、使用示例</a></li>
+      <li><a href="#ex-init" class="sub">初始化</a></li>
+      <li><a href="#ex-query" class="sub">查询/增删改</a></li>
+      <li><a href="#ex-future" class="sub">Future 用法</a></li>
+      <li class="section-title">原理与排错</li>
+      <li><a href="#charset">六、防乱码原理</a></li>
+      <li><a href="#faq">七、常见问题 FAQ</a></li>
+    </ul>
+  </nav>
+</aside>
+<main class="main">
+<h1>UEMySQL 插件使用文档</h1>
+<blockquote>
+  <strong>适用引擎</strong>: Unreal Engine 4.27 &nbsp;|&nbsp;
+  <strong>平台</strong>: Windows 64 位 &nbsp;|&nbsp;
+  <strong>依赖库</strong>: MySQL Connector/C 6.1（libmysql）&nbsp;|&nbsp;
+  <strong>接口</strong>: 纯 C++
+</blockquote>
+<p>UEMySQL 是一个用于在 UE4.27 中连接 MySQL 数据库的运行时插件。它封装了 MySQL 官方 C 客户端库 <code>libmysql</code>，提供<strong>异步执行、连接池、预处理语句防注入</strong>三大能力，并在连接的每个环节统一使用 <strong>UTF-8（utf8mb4）</strong>编码，彻底解决中文读写乱码问题。</p>
+<hr>
+
+<h2 id="intro">一、插件简介</h2>
+<p>插件模块名为 <code>UEMySQL</code>，类型为 <code>Runtime</code>，仅在 Win64 平台加载。所有数据库操作都在后台线程池中执行，结果回调会自动切回游戏主线程，避免阻塞渲染与逻辑帧。</p>
+
+<h3 id="feature">核心特性</h3>
+<table>
+  <thead><tr><th>特性</th><th>说明</th><th>对应类</th></tr></thead>
+  <tbody>
+    <tr><td><span class="badge badge-info">防乱码</span> UTF-8 全链路</td><td>连接前后双重设置 utf8mb4，读写自动 UTF-8 ↔ TCHAR 转换</td><td><code>FMySQLConnection</code></td></tr>
+    <tr><td><span class="badge badge-info">防注入</span> 预处理语句</td><td><code>?</code> 占位符 + 参数绑定，杜绝 SQL 注入</td><td><code>FMySQLConnection::ExecutePrepared</code></td></tr>
+    <tr><td><span class="badge badge-info">连接池</span> 线程安全复用</td><td>启动即建立 N 个连接，RAII 借还，失效自动重建</td><td><code>FMySQLConnectionPool</code></td></tr>
+    <tr><td><span class="badge badge-info">异步</span> 不卡主线程</td><td>后台线程执行，回调切回游戏线程；支持 <code>TFuture</code></td><td><code>FMySQLAsyncExecutor</code></td></tr>
+  </tbody>
+</table>
+
+<h3 id="structure">目录结构</h3>
+<pre><code>Plugins/UEMySQL/
+├── UEMySQL.uplugin              <span class="cm"># 插件描述文件</span>
+├── Source/UEMySQL/
+│   ├── UEMySQL.Build.cs         <span class="cm"># 构建脚本（链接 libmysql）</span>
+│   ├── Public/                  <span class="cm"># 对外头文件</span>
+│   │   ├── UEMySQLTypes.h       <span class="cm"># 配置/结果/参数 结构体</span>
+│   │   ├── UEMySQLConnection.h  <span class="cm"># 单连接封装</span>
+│   │   ├── UEMySQLConnectionPool.h
+│   │   ├── UEMySQLAsyncExecutor.h
+│   │   └── UEMySQLModule.h
+│   └── Private/                 <span class="cm"># 实现文件</span>
+└── ThirdParty/MySQL/            <span class="cm"># ★ 需自行放置（见第二章）</span>
+    ├── include/                 <span class="cm"># mysql.h 等</span>
+    ├── lib/libmysql.lib         <span class="cm"># 导入库</span>
+    └── bin/libmysql.dll         <span class="cm"># 运行时 DLL</span></code></pre>
+<hr>
+<h2 id="prepare">二、环境准备</h2>
+<p>插件本身不包含 MySQL 客户端库（体积与授权原因），你需要下载 <strong>MySQL Connector/C 6.1</strong> 并把三类文件放到 <code>ThirdParty/MySQL/</code>。</p>
+
+<h3 id="download">下载 MySQL Connector/C 6.1</h3>
+<div class="step">
+  <h4><span class="step-num">1</span> 获取连接库</h4>
+  <ol>
+    <li>访问 MySQL 官方下载页：<code>https://downloads.mysql.com/archives/c-c/</code></li>
+    <li>Product Version 选择 <strong>6.1.11</strong>，Operating System 选择 <strong>Microsoft Windows</strong>，架构选择 <strong>64-bit</strong>。</li>
+    <li>下载 <code>mysql-connector-c-6.1.11-winx64.zip</code>（免安装 zip 版即可）。</li>
+    <li>解压后可看到 <code>include/</code>、<code>lib/</code>、<code>bin/</code> 三个目录。</li>
+  </ol>
+</div>
+<blockquote>
+  <strong>为什么用 6.1？</strong> 6.1 版是最经典、UE4 教程最多、编译兼容性最好的纯 C 客户端库（编译期无 C++ ABI / OpenSSL 版本冲突），适合 UE4.27（VS2019）。若你使用 MySQL 8.0 自带的 libmysql 也可，但要确保 VC 运行库版本匹配。
+</blockquote>
+
+<h3 id="place">放置到 ThirdParty 目录</h3>
+<p>按下表把解压出来的文件复制到插件的 <code>ThirdParty/MySQL/</code> 下（目录已在 Build.cs 中约定好）：</p>
+<table>
+  <thead><tr><th>来源（Connector 解压后）</th><th>目标路径</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>include/*</code></td><td><code>ThirdParty/MySQL/include/</code></td><td>头文件，含 <code>mysql.h</code></td></tr>
+    <tr><td><code>lib/libmysql.lib</code></td><td><code>ThirdParty/MySQL/lib/libmysql.lib</code></td><td>导入库（链接期）</td></tr>
+    <tr><td><code>lib/libmysql.dll</code> 或 <code>bin/libmysql.dll</code></td><td><code>ThirdParty/MySQL/bin/libmysql.dll</code></td><td>运行时 DLL</td></tr>
+  </tbody>
+</table>
+<p>放置完成后，目录应如下所示：</p>
+<pre><code>ThirdParty/MySQL/
+├── include/
+│   ├── mysql.h
+│   ├── mysql_com.h
+│   └── ... <span class="cm"># 其余头文件</span>
+├── lib/
+│   └── libmysql.lib
+└── bin/
+    └── libmysql.dll</code></pre>
+<blockquote>
+  <strong>校验位数</strong>：务必使用 <strong>64 位</strong>的 <code>libmysql.lib / libmysql.dll</code>，与 UE4 Win64 一致；混用 32 位会在链接时报 <code>module machine type conflicts</code>。
+</blockquote>
+<hr>
+<h2 id="build">三、编译与启用</h2>
+<div class="step">
+  <h4><span class="step-num">1</span> 放入插件</h4>
+  <ol>
+    <li>确认整个 <code>UEMySQL</code> 文件夹位于工程的 <code>Plugins/</code> 目录下。</li>
+    <li>确认第二章的 <code>ThirdParty/MySQL/</code> 文件已就位。</li>
+  </ol>
+</div>
+<div class="step">
+  <h4><span class="step-num">2</span> 重新生成工程文件</h4>
+  <ol>
+    <li>右键 <code>.uproject</code> → <strong>Generate Visual Studio project files</strong>。</li>
+    <li>用 Visual Studio 打开 <code>.sln</code>，选择 <strong>Development Editor / Win64</strong>。</li>
+  </ol>
+</div>
+<div class="step">
+  <h4><span class="step-num">3</span> 编译并确认加载</h4>
+  <ol>
+    <li>编译工程（或直接启动编辑器时自动编译）。</li>
+    <li>在 <strong>输出日志</strong>中过滤 <code>LogUEMySQL</code>，看到 <code>libmysql.dll 加载成功</code> 即表示插件就绪。</li>
+    <li>依赖模块只需在你自己模块的 <code>Build.cs</code> 中加入 <code>"UEMySQL"</code>：</li>
+  </ol>
+  <pre><span class="code-label">cs</span><code><span class="tp">PublicDependencyModuleNames</span>.<span class="fn">AddRange</span>(<span class="kw">new</span> <span class="kw">string</span>[] {
+    <span class="str">"Core"</span>, <span class="str">"CoreUObject"</span>, <span class="str">"Engine"</span>,
+    <span class="str">"UEMySQL"</span> <span class="cm">// 添加本插件模块</span>
+});</code></pre>
+</div>
+<hr>
+
+<h2 id="api">四、API 参考</h2>
+
+<h3 id="api-config">配置结构体 FMySQLConnectionConfig</h3>
+<table>
+  <thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>Host</td><td>FString</td><td>127.0.0.1</td><td>数据库地址</td></tr>
+    <tr><td>Port</td><td>int32</td><td>3306</td><td>端口（与面板"启动端口"一致）</td></tr>
+    <tr><td>User</td><td>FString</td><td>root</td><td>用户名</td></tr>
+    <tr><td>Password</td><td>FString</td><td>""</td><td>密码</td></tr>
+    <tr><td>Database</td><td>FString</td><td>""</td><td>默认库名</td></tr>
+    <tr><td>CharsetName</td><td>FString</td><td>utf8mb4</td><td><span class="badge badge-info">防乱码</span> 连接字符集</td></tr>
+    <tr><td>ConnectTimeoutSeconds</td><td>int32</td><td>5</td><td>连接超时（秒）</td></tr>
+    <tr><td>bAutoReconnect</td><td>bool</td><td>true</td><td>断线自动重连</td></tr>
+    <tr><td>PoolSize</td><td>int32</td><td>4</td><td>连接池连接数</td></tr>
+  </tbody>
+</table>
+<blockquote>
+  你数据库面板里字符集若为 <code>utf8</code>，插件的 <code>utf8mb4</code> 完全兼容读写；<code>utf8mb4</code> 还额外支持 emoji。若表本身是 <code>utf8</code>，无需改动。
+</blockquote>
+
+<h3 id="api-result">结果结构体 FMySQLResult</h3>
+<table>
+  <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>bSuccess</td><td>bool</td><td>是否成功</td></tr>
+    <tr><td>ErrorCode / ErrorMessage</td><td>int32 / FString</td><td>失败时的错误码与信息</td></tr>
+    <tr><td>ColumnNames</td><td>TArray&lt;FString&gt;</td><td>列名（SELECT）</td></tr>
+    <tr><td>Rows</td><td>TArray&lt;FMySQLRow&gt;</td><td>结果行，<code>Row.Get("列名")</code> 取值</td></tr>
+    <tr><td>AffectedRows</td><td>int64</td><td>受影响行数（增删改）</td></tr>
+    <tr><td>LastInsertId</td><td>int64</td><td>自增 ID（INSERT）</td></tr>
+  </tbody>
+</table>
+<p><code>FMySQLRow</code> 提供 <code>Get(Column)</code> 取字符串值、<code>IsNull(Column)</code> 判断是否为 NULL。</p>
+
+<h3 id="api-executor">异步执行器 FMySQLAsyncExecutor</h3>
+<table>
+  <thead><tr><th>方法</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>Start(Config, OutError)</code></td><td>创建并初始化连接池</td></tr>
+    <tr><td><code>Stop()</code></td><td>关闭连接池</td></tr>
+    <tr><td><code>ExecuteAsync(SQL, OnComplete)</code></td><td>异步执行原始 SQL，回调在游戏线程</td></tr>
+    <tr><td><code>ExecutePreparedAsync(SQL, Params, OnComplete)</code></td><td><span class="badge badge-pass">推荐</span> 异步预处理，防注入</td></tr>
+    <tr><td><code>ExecutePreparedFuture(SQL, Params)</code></td><td>返回 <code>TFuture&lt;FMySQLResult&gt;</code></td></tr>
+    <tr><td><code>ExecutePreparedSync(SQL, Params)</code></td><td>同步执行（阻塞当前线程）</td></tr>
+  </tbody>
+</table>
+<p>参数用 <code>FMySQLParam</code> 工厂函数构造：<code>MakeInt</code> / <code>MakeDouble</code> / <code>MakeString</code> / <code>MakeBlob</code> / <code>MakeNull</code>。</p>
+<hr>
+<h2 id="example">五、使用示例</h2>
+<p>下面示例通常放在 <code>GameInstance</code>、<code>GameMode</code> 或某个管理器 Actor 中。执行器建议作为长生命周期成员持有。</p>
+
+<h3 id="ex-init">初始化连接</h3>
+<pre><span class="code-label">cpp</span><code><span class="pp">#include</span> <span class="str">"UEMySQLAsyncExecutor.h"</span>
+
+<span class="cm">// 作为成员变量持有（.h）</span>
+<span class="tp">FMySQLAsyncExecutorPtr</span> DBExecutor;
+
+<span class="cm">// 初始化（.cpp，例如 UGameInstance::Init）</span>
+<span class="kw">void</span> <span class="fn">InitDatabase</span>()
+{
+    <span class="tp">FMySQLConnectionConfig</span> Cfg;
+    Cfg.Host     = <span class="fn">TEXT</span>(<span class="str">"127.0.0.1"</span>);
+    Cfg.Port     = <span class="num">3306</span>;                <span class="cm">// 与面板"启动端口"一致</span>
+    Cfg.User     = <span class="fn">TEXT</span>(<span class="str">"root"</span>);
+    Cfg.Password = <span class="fn">TEXT</span>(<span class="str">"123456"</span>);
+    Cfg.Database = <span class="fn">TEXT</span>(<span class="str">"game_db"</span>);
+    Cfg.CharsetName = <span class="fn">TEXT</span>(<span class="str">"utf8mb4"</span>); <span class="cm">// 防乱码，默认即此值</span>
+    Cfg.PoolSize    = <span class="num">4</span>;
+
+    DBExecutor = <span class="fn">MakeShared</span>&lt;<span class="tp">FMySQLAsyncExecutor</span>, <span class="tp">ESPMode</span>::ThreadSafe&gt;();
+    <span class="tp">FString</span> Err;
+    <span class="kw">if</span> (!DBExecutor-&gt;<span class="fn">Start</span>(Cfg, Err))
+    {
+        <span class="fn">UE_LOG</span>(LogTemp, Error, <span class="fn">TEXT</span>(<span class="str">"MySQL 连接失败: %s"</span>), *Err);
+    }
+}</code></pre>
+
+<h3 id="ex-query">查询与增删改（预处理防注入）</h3>
+<p><strong>查询（SELECT）</strong>——用户名含中文也不会乱码：</p>
+<pre><span class="code-label">cpp</span><code><span class="tp">TArray</span>&lt;<span class="tp">FMySQLParam</span>&gt; Params;
+Params.<span class="fn">Add</span>(<span class="tp">FMySQLParam</span>::<span class="fn">MakeString</span>(<span class="fn">TEXT</span>(<span class="str">"张三"</span>)));   <span class="cm">// 中文参数</span>
+Params.<span class="fn">Add</span>(<span class="tp">FMySQLParam</span>::<span class="fn">MakeInt</span>(<span class="num">18</span>));
+
+DBExecutor-&gt;<span class="fn">ExecutePreparedAsync</span>(
+    <span class="fn">TEXT</span>(<span class="str">"SELECT id, name, city FROM users WHERE name=? AND age&gt;?"</span>),
+    Params,
+    <span class="tp">FMySQLResultDelegate</span>::<span class="fn">CreateLambda</span>([](<span class="kw">const</span> <span class="tp">FMySQLResult</span>&amp; R)
+    {
+        <span class="cm">// 回调已在游戏线程，可安全操作 UObject / UI</span>
+        <span class="kw">if</span> (!R.bSuccess)
+        {
+            <span class="fn">UE_LOG</span>(LogTemp, Error, <span class="fn">TEXT</span>(<span class="str">"查询失败 [%d]: %s"</span>), R.ErrorCode, *R.ErrorMessage);
+            <span class="kw">return</span>;
+        }
+        <span class="kw">for</span> (<span class="kw">const</span> <span class="tp">FMySQLRow</span>&amp; Row : R.Rows)
+        {
+            <span class="tp">FString</span> Id   = Row.<span class="fn">Get</span>(<span class="fn">TEXT</span>(<span class="str">"id"</span>));
+            <span class="tp">FString</span> Name = Row.<span class="fn">Get</span>(<span class="fn">TEXT</span>(<span class="str">"name"</span>));  <span class="cm">// 中文正确显示</span>
+            <span class="tp">FString</span> City = Row.<span class="fn">Get</span>(<span class="fn">TEXT</span>(<span class="str">"city"</span>));
+            <span class="fn">UE_LOG</span>(LogTemp, Log, <span class="fn">TEXT</span>(<span class="str">"用户 %s = %s (%s)"</span>), *Id, *Name, *City);
+        }
+    }));</code></pre>
+
+<p><strong>插入（INSERT）</strong>——获取自增 ID：</p>
+<pre><span class="code-label">cpp</span><code><span class="tp">TArray</span>&lt;<span class="tp">FMySQLParam</span>&gt; P;
+P.<span class="fn">Add</span>(<span class="tp">FMySQLParam</span>::<span class="fn">MakeString</span>(<span class="fn">TEXT</span>(<span class="str">"李四"</span>)));
+P.<span class="fn">Add</span>(<span class="tp">FMySQLParam</span>::<span class="fn">MakeString</span>(<span class="fn">TEXT</span>(<span class="str">"北京"</span>)));
+P.<span class="fn">Add</span>(<span class="tp">FMySQLParam</span>::<span class="fn">MakeInt</span>(<span class="num">20</span>));
+
+DBExecutor-&gt;<span class="fn">ExecutePreparedAsync</span>(
+    <span class="fn">TEXT</span>(<span class="str">"INSERT INTO users(name, city, age) VALUES(?,?,?)"</span>), P,
+    <span class="tp">FMySQLResultDelegate</span>::<span class="fn">CreateLambda</span>([](<span class="kw">const</span> <span class="tp">FMySQLResult</span>&amp; R)
+    {
+        <span class="kw">if</span> (R.bSuccess)
+            <span class="fn">UE_LOG</span>(LogTemp, Log, <span class="fn">TEXT</span>(<span class="str">"插入成功，新 ID=%lld, 影响 %lld 行"</span>),
+                R.LastInsertId, R.AffectedRows);
+    }));</code></pre>
+
+<h3 id="ex-future">TFuture 用法（在自己的后台任务中取结果）</h3>
+<pre><span class="code-label">cpp</span><code><span class="tp">TArray</span>&lt;<span class="tp">FMySQLParam</span>&gt; P{ <span class="tp">FMySQLParam</span>::<span class="fn">MakeInt</span>(<span class="num">100</span>) };
+<span class="tp">TFuture</span>&lt;<span class="tp">FMySQLResult</span>&gt; Future =
+    DBExecutor-&gt;<span class="fn">ExecutePreparedFuture</span>(<span class="fn">TEXT</span>(<span class="str">"SELECT * FROM items WHERE id=?"</span>), P);
+
+<span class="cm">// 在后台线程可 Get() 阻塞等待；不要在游戏线程直接 Get() 以免卡帧</span>
+<span class="tp">FMySQLResult</span> R = Future.<span class="fn">Get</span>();</code></pre>
+<blockquote>
+  <strong>DDL / 无参语句</strong>：建表等可用 <code>ExecuteAsync(TEXT("CREATE TABLE ..."), Cb)</code>。凡是拼接了<strong>用户输入</strong>的语句，一律改用 <code>ExecutePreparedAsync</code> 防注入。
+</blockquote>
+<hr>
+<h2 id="charset">六、防乱码原理</h2>
+<p>中文乱码的根源是<strong>编码不一致</strong>：数据库存的是 UTF-8 字节，而客户端却按 GBK 或 Latin1 解释。本插件从三个环节强制统一 UTF-8：</p>
+<div class="step">
+  <h4><span class="step-num">1</span> 连接前：协商字符集</h4>
+  <p>在 <code>mysql_real_connect</code> 之前调用 <code>mysql_options(MYSQL_SET_CHARSET_NAME, "utf8mb4")</code>，握手阶段就告诉服务器客户端用 UTF-8。</p>
+</div>
+<div class="step">
+  <h4><span class="step-num">2</span> 连接后：显式 SET NAMES</h4>
+  <p>连接成功后再调用 <code>mysql_set_character_set(conn, "utf8mb4")</code>（等价于 <code>SET NAMES utf8mb4</code>），双保险统一 client / connection / results 三个字符集。</p>
+</div>
+<div class="step">
+  <h4><span class="step-num">3</span> 读写：字节级转换</h4>
+  <p>写入时把 <code>FString</code>（UTF-16）经 <code>FTCHARToUTF8</code> 转 UTF-8 字节交给 C API；读取时按 <code>mysql_fetch_lengths</code> 返回的<strong>字节长度</strong>用 <code>FUTF8ToTCHAR</code> 还原，正确处理中文多字节，绝不截断。</p>
+</div>
+<pre><span class="code-label">cpp</span><code><span class="cm">// 连接前</span>
+<span class="fn">mysql_options</span>(Connection, MYSQL_SET_CHARSET_NAME, <span class="str">"utf8mb4"</span>);
+<span class="cm">// 连接后</span>
+<span class="fn">mysql_set_character_set</span>(Connection, <span class="str">"utf8mb4"</span>);
+<span class="cm">// 读取：按字节长度转换（关键，避免中文被切半）</span>
+<span class="tp">FUTF8ToTCHAR</span> <span class="fn">Conv</span>(RowData[i], Lengths[i]);</code></pre>
+<blockquote>
+  <strong>前提</strong>：数据库表和字段本身应为 <code>utf8</code> 或 <code>utf8mb4</code> 排序规则。若历史表是 <code>latin1</code> 存了中文，需先用 <code>ALTER TABLE ... CONVERT TO CHARACTER SET utf8mb4</code> 修正，插件无法挽救已损坏的历史数据。
+</blockquote>
+<hr>
+
+<h2 id="faq">七、常见问题 FAQ</h2>
+<table>
+  <thead><tr><th>现象</th><th>原因与解决</th></tr></thead>
+  <tbody>
+    <tr><td>启动报"找不到 libmysql.dll"</td><td>确认 <code>ThirdParty/MySQL/bin/libmysql.dll</code> 存在且为 64 位。打包后 DLL 会自动拷到 <code>Binaries/Win64</code>。</td></tr>
+    <tr><td>链接错误 <code>machine type conflicts</code></td><td>用了 32 位的 lib。必须使用 winx64 版本。</td></tr>
+    <tr><td>连接报 <code>2003 Can't connect</code></td><td>数据库未启动，或端口/防火墙问题。核对面板"启动端口"与 <code>Port</code>。</td></tr>
+    <tr><td>连接报 <code>1045 Access denied</code></td><td>用户名/密码错误，或该用户无远程访问权限。</td></tr>
+    <tr><td>中文仍乱码</td><td>确认表字段是 utf8/utf8mb4；老数据是 latin1 存的需先转换字符集。</td></tr>
+    <tr><td>回调里能操作 UI 吗</td><td>可以。<code>ExecuteXxxAsync</code> 的回调保证在游戏线程执行。</td></tr>
+    <tr><td>游戏线程能同步查吗</td><td>可以用 <code>ExecutePreparedSync</code>，但会阻塞当前帧，仅建议用于加载阶段或后台线程。</td></tr>
+  </tbody>
+</table>
+<hr>
+<blockquote>
+  <strong>小结</strong>：拷入 <code>ThirdParty/MySQL</code> → 生成工程 → 编译 → 持有 <code>FMySQLAsyncExecutor</code> 并 <code>Start</code> → 用 <code>ExecutePreparedAsync</code> 读写。全程 utf8mb4，中文无忧，参数绑定防注入，连接池 + 异步不卡主线程。
+</blockquote>
+</main>
+<button class="to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">↑</button>
+</body>
+</html>

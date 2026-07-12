@@ -3,7 +3,7 @@
 	"Version": 1,
 	"VersionName": "1.0.0",
 	"FriendlyName": "UE MySQL",
-	"Description": "Unreal Engine 4.27 连接 MySQL 数据库插件，基于 MySQL Connector/C 6.1（libmysql），支持异步执行、连接池、预处理语句防注入，全程 UTF-8 编码防止中文乱码。",
+	"Description": "Unreal Engine 4.27 连接 MySQL 数据库插件，基于 MySQL Connector/C 6.1（libmysql）。拆分为底层核心模块(UEMySQLCore, 无引擎依赖)与业务包装模块(UEMySQL)。",
 	"Category": "Database",
 	"CreatedBy": "NetGame",
 	"CreatedByURL": "",
@@ -15,6 +15,12 @@
 	"IsBetaVersion": false,
 	"Installed": false,
 	"Modules": [
+		{
+			"Name": "UEMySQLCore",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"WhitelistPlatforms": [ "Win64" ]
+		},
 		{
 			"Name": "UEMySQL",
 			"Type": "Runtime",

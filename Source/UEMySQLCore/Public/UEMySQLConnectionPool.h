@@ -19,7 +19,7 @@
  *
  * 归还时会做存活检测（mysql_ping），失效连接会被重建。
  */
-class UEMYSQL_API FMySQLConnectionPool : public TSharedFromThis<FMySQLConnectionPool, ESPMode::ThreadSafe>
+class UEMYSQLCORE_API FMySQLConnectionPool : public TSharedFromThis<FMySQLConnectionPool, ESPMode::ThreadSafe>
 {
 public:
 	FMySQLConnectionPool();
@@ -59,7 +59,7 @@ private:
 typedef TSharedPtr<FMySQLConnectionPool, ESPMode::ThreadSafe> FMySQLConnectionPoolPtr;
 
 /** RAII 作用域连接：构造时借出，析构时自动归还。 */
-class UEMYSQL_API FMySQLScopedConnection
+class UEMYSQLCORE_API FMySQLScopedConnection
 {
 public:
 	explicit FMySQLScopedConnection(const FMySQLConnectionPoolPtr& InPool, int32 TimeoutMs = 5000)

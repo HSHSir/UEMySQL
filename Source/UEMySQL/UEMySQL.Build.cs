@@ -1,5 +1,4 @@
 using UnrealBuildTool;
-using System.IO;
 
 public class UEMySQL : ModuleRules
 {
@@ -8,46 +7,17 @@ public class UEMySQL : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		bEnforceIWYU = false;
 
+		// 业务 / 反射层包装模块（可选占位）。
+		// 当前不引入 Engine 依赖，避免无谓的引擎编译；服务器程序只需链接
+		// 底层核心模块 UEMySQLCore 即可。若后续需要把 MySQL 能力以
+		// UFUNCTION(BlueprintCallable) 暴露给蓝图，请在本模块中加入 UObject
+		// 包装类，并为本 Build.cs 增加 "Engine" 依赖。
 		PublicDependencyModuleNames.AddRange(new string[] {
 			"Core",
 			"CoreUObject",
-			"Engine"
-		});
-
-		PrivateDependencyModuleNames.AddRange(new string[] {
-			"Projects"
+			"UEMySQLCore"
 		});
 
 		CppStandard = CppStandardVersion.Cpp17;
-
-		// ================= MySQL Connector/C 6.1 (libmysql) =================
-		// ThirdParty 目录结构（需自行放置，详见 Documentation/使用文档.html）:
-		//   ThirdParty/MySQL/include/  -> mysql.h 等头文件
-		//   ThirdParty/MySQL/lib/      -> libmysql.lib (导入库)
-		//   ThirdParty/MySQL/bin/      -> libmysql.dll (运行时依赖)
-		string MySQLRoot   = Path.Combine(ModuleDirectory, "..", "..", "ThirdParty", "MySQL");
-		string IncludePath = Path.Combine(MySQLRoot, "include");
-		string LibPath     = Path.Combine(MySQLRoot, "lib");
-		string BinPath     = Path.Combine(MySQLRoot, "bin");
-
-		if (Target.Platform == UnrealTargetPlatform.Win64)
-		{
-			PublicSystemIncludePaths.Add(IncludePath);
-
-			string ImportLib = Path.Combine(LibPath, "libmysql.lib");
-			PublicAdditionalLibraries.Add(ImportLib);
-
-			string Dll = Path.Combine(BinPath, "libmysql.dll");
-			// 声明运行时依赖，打包时会自动拷贝到 Binaries/Win64
-			RuntimeDependencies.Add("$(BinaryOutputDir)/libmysql.dll", Dll);
-			// 编辑器/独立运行时按需加载 DLL
-			PublicDelayLoadDLLs.Add("libmysql.dll");
-
-			PublicDefinitions.Add("WITH_UEMYSQL=1");
-		}
-		else
-		{
-			PublicDefinitions.Add("WITH_UEMYSQL=0");
-		}
 	}
 }
