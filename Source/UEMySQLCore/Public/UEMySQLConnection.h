@@ -60,6 +60,15 @@ private:
 	/** 从普通查询（mysql_store_result）解析结果集 */
 	FMySQLResult ParseStoreResult();
 
+	/**
+	 * 排空剩余的多个结果集。
+	 * 连接时启用了 CLIENT_MULTI_STATEMENTS，存储过程 / 批量语句可能产生多个结果集。
+	 * 若只消费第一个而遗漏其余，后续任意查询都会报 "Commands out of sync" 导致连接损坏。
+	 * 本函数将首个之后的结果集全部读取并释放（数据丢弃，保持连接协议同步）。
+	 * @param Result 首个结果集（已填充），若排空过程出错则在此覆盖错误信息。
+	 */
+	void DrainRemainingResults(FMySQLResult& Result);
+
 	/** 填充错误信息到 Result */
 	void FillError(FMySQLResult& Result) const;
 

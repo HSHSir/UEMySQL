@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UEMySQL 插件使用手册</title>
+<style>
+  :root{
+    --bg:#0f1419; --bg-soft:#161b22; --bg-code:#1b222c; --panel:#11161d;
+    --border:#2a323d; --text:#d6dde6; --muted:#8b97a6; --accent:#4cc2ff;
+    --accent2:#7ee787; --warn:#ffb454; --danger:#ff6b6b; --link:#58a6ff;
+    --h1:#e6edf3; --h2:#cdd9e5; --h3:#b7c2d0;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.7;font-size:15px;}
+  a{color:var(--link);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  .layout{display:flex;min-height:100vh;}
+  nav.sidebar{position:sticky;top:0;align-self:flex-start;height:100vh;width:300px;
+    flex:0 0 300px;overflow-y:auto;background:var(--panel);border-right:1px solid var(--border);
+    padding:22px 16px;}
+  nav.sidebar h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    margin:18px 0 8px;padding-left:10px;}
+  nav.sidebar ul{list-style:none;margin:0;padding:0;}
+  nav.sidebar li a{display:block;padding:5px 10px;border-radius:6px;color:var(--muted);font-size:13.5px;}
+  nav.sidebar li a:hover{background:var(--bg-soft);color:var(--text);text-decoration:none;}
+  nav.sidebar li a.active{background:rgba(76,194,255,.12);color:var(--accent);font-weight:600;}
+  nav.sidebar li.sub a{padding-left:24px;font-size:13px;}
+  nav.sidebar .brand{font-size:16px;font-weight:700;color:var(--h1);padding:0 10px 6px;}
+  nav.sidebar .brand small{display:block;font-weight:400;color:var(--muted);font-size:11px;letter-spacing:.04em;}
+  main{flex:1;max-width:980px;margin:0 auto;padding:40px 48px 120px;}
+  header.doc-head{border-bottom:1px solid var(--border);padding-bottom:18px;margin-bottom:28px;}
+  h1{font-size:30px;color:var(--h1);margin:0 0 6px;line-height:1.25;}
+  h2{font-size:23px;color:var(--h2);margin:42px 0 14px;padding-top:14px;border-top:1px solid var(--border);}
+  h3{font-size:18px;color:var(--h3);margin:28px 0 10px;}
+  h4{font-size:15px;color:var(--text);margin:20px 0 8px;}
+  p{margin:10px 0;}
+  ul,ol{padding-left:22px;}
+  li{margin:5px 0;}
+  code{background:var(--bg-code);color:#ffd9a0;padding:1.5px 6px;border-radius:5px;
+    font-family:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:13px;}
+  pre{background:var(--bg-code);border:1px solid var(--border);border-radius:10px;padding:16px 18px;
+    overflow-x:auto;margin:14px 0;}
+  pre code{background:none;color:#c9d4e0;padding:0;font-size:13px;line-height:1.6;white-space:pre;}
+  table{border-collapse:collapse;width:100%;margin:16px 0;font-size:13.5px;}
+  th,td{border:1px solid var(--border);padding:8px 11px;text-align:left;vertical-align:top;}
+  th{background:var(--bg-soft);color:var(--h2);font-weight:600;}
+  tr:nth-child(even) td{background:rgba(255,255,255,.02);}
+  .tag{display:inline-block;font-size:11px;padding:2px 9px;border-radius:20px;
+    background:rgba(76,194,255,.15);color:var(--accent);border:1px solid rgba(76,194,255,.3);margin-right:6px;}
+  .tag.green{background:rgba(126,231,135,.13);color:var(--accent2);border-color:rgba(126,231,135,.3);}
+  .tag.warn{background:rgba(255,180,84,.13);color:var(--warn);border-color:rgba(255,180,84,.3);}
+  .tag.danger{background:rgba(255,107,107,.13);color:var(--danger);border-color:rgba(255,107,107,.3);}
+  .callout{border-left:4px solid var(--accent);background:var(--bg-soft);padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;}
+  .callout.warn{border-color:var(--warn);}
+  .callout.danger{border-color:var(--danger);}
+  .callout.ok{border-color:var(--accent2);}
+  .callout b{color:var(--h1);}
+  .muted{color:var(--muted);}
+  .topbtn{position:fixed;right:26px;bottom:26px;background:var(--accent);color:#06222e;border:none;
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;opacity:.85;box-shadow:0 4px 14px rgba(0,0,0,.4);}
+  .topbtn:hover{opacity:1;}
+  @media(max-width:1100px){nav.sidebar{display:none;}main{padding:24px 18px;}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="sidebar">
+  <div class="brand">UEMySQL<small>UE4.27 MySQL 数据库插件 · v1.0.0</small></div>
+  <h2>目录</h2>
+  <ul>
+    <li><a href="#overview">1. 概述</a></li>
+    <li><a href="#features">2. 核心特性</a></li>
+    <li><a href="#env">3. 环境准备</a></li>
+    <li class="sub"><a href="#env-lib">3.1 下载 MySQL Connector/C</a></li>
+    <li class="sub"><a href="#env-place">3.2 放置第三方库</a></li>
+    <li class="sub"><a href="#env-dll">3.3 libmysql.dll 部署</a></li>
+    <li><a href="#modules">4. 模块与依赖</a></li>
+    <li><a href="#config">5. 配置说明</a></li>
+    <li><a href="#types">6. 核心数据类型</a></li>
+    <li class="sub"><a href="#types-config">6.1 FMySQLConnectionConfig</a></li>
+    <li class="sub"><a href="#types-result">6.2 FMySQLResult / FMySQLRow</a></li>
+    <li class="sub"><a href="#types-param">6.3 FMySQLParam / EMySQLParamType</a></li>
+    <li><a href="#api">7. 主要接口（API）</a></li>
+    <li class="sub"><a href="#api-conn">7.1 FMySQLConnection</a></li>
+    <li class="sub"><a href="#api-pool">7.2 FMySQLConnectionPool</a></li>
+    <li class="sub"><a href="#api-exec">7.3 FMySQLAsyncExecutor</a></li>
+    <li><a href="#usage">8. 使用流程与示例</a></li>
+    <li class="sub"><a href="#usage-init">8.1 初始化与连接池</a></li>
+    <li class="sub"><a href="#usage-async">8.2 异步查询（回调回游戏线程）</a></li>
+    <li class="sub"><a href="#usage-prep">8.3 预处理参数化（防注入）</a></li>
+    <li class="sub"><a href="#usage-tfuture">8.4 TFuture 用法</a></li>
+    <li class="sub"><a href="#usage-sync">8.5 同步用法</a></li>
+    <li class="sub"><a href="#usage-raii">8.6 连接池 RAII 直接用法</a></li>
+    <li class="sub"><a href="#usage-tx">8.7 事务与存储过程</a></li>
+    <li class="sub"><a href="#usage-hsh">8.8 在 HSHCustomServer 中集成</a></li>
+    <li class="sub"><a href="#usage-comexample">8.9 完整示例</a></li>
+    <li><a href="#encoding">9. 防中文乱码原理</a></li>
+    <li><a href="#faq">10. 常见问题排查</a></li>
+    <li><a href="#notes">11. 注意事项与已知限制</a></li>
+    <li><a href="#bp">12. 蓝图封装（TODO）</a></li>
+    <li><a href="#sql">13. 常用 SQL 语句用法</a></li>
+    <li class="sub"><a href="#sql-create">13.1 建表 CREATE TABLE</a></li>
+    <li class="sub"><a href="#sql-insert">13.2 增加数据 INSERT</a></li>
+    <li class="sub"><a href="#sql-select">13.3 查询数据 SELECT</a></li>
+    <li class="sub"><a href="#sql-update">13.4 修改数据 UPDATE</a></li>
+    <li class="sub"><a href="#sql-delete">13.5 删除数据 DELETE</a></li>
+    <li class="sub"><a href="#sql-batch">13.6 批量增删改查</a></li>
+    <li class="sub"><a href="#sql-tx">13.7 事务批量写入</a></li>
+  </ul>
+</nav>
+
+<main>
+<header class="doc-head">
+  <div class="crumbs">HSHCustomServer · 插件文档</div>
+  <h1>UEMySQL 插件使用手册</h1>
+  <p class="muted">基于 MySQL Connector/C 6.1（libmysql）的 UE4.27 数据库连接插件 · 异步执行 / 连接池 / 预处理防注入 / 全链路 UTF-8</p>
+  <p>
+    <span class="tag">Database</span>
+    <span class="tag green">异步执行</span>
+    <span class="tag green">连接池</span>
+    <span class="tag green">预处理防注入</span>
+    <span class="tag green">UTF-8</span>
+    <span class="tag warn">仅 Win64</span>
+    <span class="tag danger">无蓝图节点</span>
+  </p>
+</header>
+
+<!-- ========== 1 概述 ========== -->
+<h2 id="overview">1. 概述</h2>
+<p><b>UEMySQL</b> 是 NetGame 自研、面向 <b>Unreal Engine 4.27</b> 的 MySQL 数据库访问插件，底层基于 <b>MySQL Connector/C 6.1（libmysql，客户端库版本 6.1.11，对应服务端协议 5.7.16）</b>。它把 C API 封装为面向游戏服务的现代 C++ 接口，提供三大能力支柱：</p>
+<ol>
+  <li><b>异步执行</b>：SQL 在后台线程池执行，结果回调默认切回<b>游戏线程</b>（可直接操作 UObject/UI）。</li>
+  <li><b>线程安全连接池</b>：启动时预建 N 个连接，RAII 借还，失效自动重建。</li>
+  <li><b>预处理语句（Prepated Statement）</b>：<code>?</code> 占位符 + 参数绑定，从根源上防止 SQL 注入。</li>
+</ol>
+<div class="callout warn"><b>重要前提：</b>UEMySQL 当前为<b>纯 C++ 插件</b>，所有核心类均为普通 C++ 类（非 UObject），<b>没有任何 BlueprintCallable 蓝图节点</b>。蓝图集成需自行封装一层 UObject 转发（见 §12）。平台仅支持 <b>Win64</b>。</div>
+
+<!-- ========== 2 特性 ========== -->
+<h2 id="features">2. 核心特性</h2>
+<table>
+  <thead><tr><th>特性</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>异步执行 + 回游戏线程</td><td>后台线程池执行，<code>AsyncTask(ENamedThreads::GameThread)</code> 切回主线程回调</td></tr>
+    <tr><td>线程安全连接池</td><td>固定大小池，<code>Acquire</code> 阻塞借出 / <code>Release</code> 归还前存活检测与重建</td></tr>
+    <tr><td>预处理语句防注入</td><td><code>FMySQLParam</code> 工厂函数绑定 Null/Int64/Double/String/Blob</td></tr>
+    <tr><td>全链路 UTF-8</td><td>连接前协商 <code>utf8mb4</code> + 连接后 <code>SET NAMES</code> + 字节级转换，三重防乱码</td></tr>
+    <tr><td>断线自动重连</td><td><code>MYSQL_OPT_RECONNECT</code>，<code>IsAlive()</code> 触发重连</td></tr>
+    <tr><td>连接超时配置</td><td><code>MYSQL_OPT_CONNECT_TIMEOUT</code></td></tr>
+    <tr><td>延迟加载 DLL</td><td>DLL 缺失时程序仍可启动（仅 MySQL 不可用），<code>PublicDelayLoadDLLs</code></td></tr>
+    <tr><td>TFuture 支持</td><td><code>ExecutePreparedFuture</code> 返回 <code>TFuture&lt;FMySQLResult&gt;</code></td></tr>
+  </tbody>
+</table>
+
+<!-- ========== 3 环境准备 ========== -->
+<h2 id="env">3. 环境准备</h2>
+<h3 id="env-lib">3.1 下载 MySQL Connector/C</h3>
+<p>第三方库因体积与授权未入库，需手动下载 <b>MySQL Connector/C 6.1.11（Microsoft Windows, 64-bit）</b>：</p>
+<pre><code># 官方归档地址
+https://downloads.mysql.com/archives/c-c/
+
+# 下载文件
+mysql-connector-c-6.1.11-winx64.zip</code></pre>
+<div class="callout danger"><b>务必 64 位：</b>若误用 32 位库，链接期将报 <code>module machine type conflicts</code>（x86 与 x64 冲突）。</div>
+
+<h3 id="env-place">3.2 放置第三方库</h3>
+<p>解压后，将头文件与库文件放入插件目录对应位置（路径由 <code>UEMySQLCore.Build.cs</code> 引用）：</p>
+<pre><code>Engine/Plugins/HSH/UEMySQL/ThirdParty/MySQL/
+├── include/        # 来自 zip 的 include/（含 mysql.h, mysql_version.h 等）
+├── lib/
+│   └── libmysql.lib # 导入库（链接期）
+└── bin/
+    └── libmysql.dll # 运行时 DLL（64 位）</code></pre>
+
+<h3 id="env-dll">3.3 libmysql.dll 部署</h3>
+<p>DLL 部署由 <code>UEMySQLCore.Build.cs</code> 自动处理：</p>
+<ul>
+  <li>打包时通过 <code>RuntimeDependencies.Add("$(BinaryOutputDir)/libmysql.dll", Dll)</code> 自动拷贝到输出目录。</li>
+  <li>模块启动（<code>FUEMySQLModule::StartupModule</code>）还会按以下候选路径显式加载，优先级从高到低：
+    <ol>
+      <li>插件目录 <code>ThirdParty/MySQL/bin/libmysql.dll</code></li>
+      <li><code>项目目录/libmysql.dll</code>（打包后 .exe 同目录）</li>
+      <li><code>项目目录/Binaries/Win64/libmysql.dll</code></li>
+      <li><code>引擎目录/Binaries/Win64/libmysql.dll</code></li>
+    </ol>
+  </li>
+  <li>延迟加载（<code>PublicDelayLoadDLLs</code>）保证 DLL 缺失时程序仍能启动，仅 MySQL 功能不可用。</li>
+</ul>
+
+<!-- ========== 4 模块 ========== -->
+<h2 id="modules">4. 模块与依赖</h2>
+<p>插件由两个模块组成（<code>Engine/Plugins/HSH/UEMySQL</code>）：</p>
+<table>
+  <thead><tr><th>模块</th><th>加载阶段</th><th>平台</th><th>依赖</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>UEMySQLCore</code></td><td>Default</td><td>Win64</td><td>Core, CoreUObject, Projects；链接 libmysql</td><td>底层核心，<b>不依赖 Engine</b>，封装 libmysql C API</td></tr>
+    <tr><td><code>UEMySQL</code></td><td>Default</td><td>Win64</td><td>Core, CoreUObject, <b>UEMySQLCore</b></td><td>业务/反射层<b>占位模块</b>；当前仅空壳，蓝图暴露为 TODO</td></tr>
+  </tbody>
+</table>
+<p>消费方 <code>Build.cs</code> 依赖（如 HSHCustomServer）：</p>
+<pre><code>PrivateDependencyModuleNames.Add("UEMySQLCore");</code></pre>
+
+<!-- ========== 5 配置 ========== -->
+<h2 id="config">5. 配置说明</h2>
+<div class="callout warn"><b>无 ini 配置：</b>UEMySQL <b>没有</b>任何 <code>.ini</code> 配置读取，所有配置通过 C++ 结构体 <code>FMySQLConnectionConfig</code> 在代码中设置，无法热更。如需可配置化，请自行封装读取 ini 的逻辑。</div>
+<p><code>FMySQLConnectionConfig</code>（USTRUCT，<code>BlueprintType</code>）字段如下：</p>
+<table>
+  <thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>作用</th></tr></thead>
+  <tbody>
+    <tr><td><code>Host</code></td><td>FString</td><td><code>"127.0.0.1"</code></td><td>数据库地址</td></tr>
+    <tr><td><code>Port</code></td><td>int32</td><td><code>3306</code></td><td>端口</td></tr>
+    <tr><td><code>User</code></td><td>FString</td><td><code>"root"</code></td><td>用户名</td></tr>
+    <tr><td><code>Password</code></td><td>FString</td><td><code>"root"</code></td><td>密码</td></tr>
+    <tr><td><code>Database</code></td><td>FString</td><td><code>""</code></td><td>默认库名（空串=不指定库）</td></tr>
+    <tr><td><code>CharsetName</code></td><td>FString</td><td><code>"utf8mb4"</code></td><td>连接字符集（防乱码核心）</td></tr>
+    <tr><td><code>ConnectTimeoutSeconds</code></td><td>int32</td><td><code>5</code></td><td>连接超时（秒），代码内 <code>Max(1, …)</code></td></tr>
+    <tr><td><code>bAutoReconnect</code></td><td>bool</td><td><code>true</code></td><td>断线自动重连</td></tr>
+    <tr><td><code>PoolSize</code></td><td>int32</td><td><code>4</code></td><td>连接池大小（代码内 <code>Max(1, …)</code>）</td></tr>
+  </tbody>
+</table>
+
+<!-- ========== 6 类型 ========== -->
+<h2 id="types">6. 核心数据类型</h2>
+
+<h3 id="types-config">6.1 FMySQLConnectionConfig</h3>
+<p>见 §5 配置表。示例：</p>
+<pre><code>FMySQLConnectionConfig Cfg;
+Cfg.Host = TEXT("127.0.0.1");
+Cfg.Port = 3306;
+Cfg.User = TEXT("root");
+Cfg.Password = TEXT("123456");
+Cfg.Database = TEXT("game_db");
+Cfg.CharsetName = TEXT("utf8mb4");
+Cfg.PoolSize = 4;</code></pre>
+
+<h3 id="types-result">6.2 FMySQLResult / FMySQLRow</h3>
+<table>
+  <thead><tr><th>类型 / 字段</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td colspan="2"><b>FMySQLResult</b>（查询结果）</td></tr>
+    <tr><td><code>bool bSuccess</code></td><td>是否成功</td></tr>
+    <tr><td><code>int32 ErrorCode</code></td><td>错误码，0=无错，其余为 <code>mysql_errno</code></td></tr>
+    <tr><td><code>FString ErrorMessage</code></td><td>错误信息</td></tr>
+    <tr><td><code>TArray&lt;FString&gt; ColumnNames</code></td><td>有序列名（SELECT 有效）</td></tr>
+    <tr><td><code>TArray&lt;FMySQLRow&gt; Rows</code></td><td>结果集行</td></tr>
+    <tr><td><code>int64 AffectedRows</code></td><td>受影响行数（增删改）</td></tr>
+    <tr><td><code>int64 LastInsertId</code></td><td>自增 ID（INSERT）</td></tr>
+    <tr><td><code>int32 NumRows()</code></td><td>返回 <code>Rows.Num()</code></td></tr>
+    <tr><td colspan="2"><b>FMySQLRow</b>（单行）</td></tr>
+    <tr><td><code>TMap&lt;FString,FString&gt; Fields</code></td><td>列名→值（统一以 FString 存储）</td></tr>
+    <tr><td><code>TSet&lt;FString&gt; NullFields</code></td><td>记录 NULL 字段（区分空串与 NULL）</td></tr>
+    <tr><td><code>const FString&amp; Get(Column)</code></td><td>取字符串值（找不到返回静态空串）</td></tr>
+    <tr><td><code>bool IsNull(Column)</code></td><td>是否 NULL</td></tr>
+  </tbody>
+</table>
+<div class="callout"><b>值类型提示：</b>所有列值统一以 <code>FString</code> 返回，数字/日期/小数需调用方自行解析（如 <code>FCString::Atoi64(*Row.Get("id"))</code>）。<code>LastInsertId</code>/<code>AffectedRows</code> 为 int64。</div>
+
+<h3 id="types-param">6.3 FMySQLParam / EMySQLParamType</h3>
+<p>预处理参数使用工厂函数构造，SQL 中按出现顺序以 <code>?</code> 占位：</p>
+<table>
+  <thead><tr><th>工厂方法</th><th>对应类型</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>FMySQLParam::MakeNull()</code></td><td>Null</td><td>NULL 值</td></tr>
+    <tr><td><code>FMySQLParam::MakeInt(int64)</code></td><td>Int64</td><td>整数（float 需用 Double）</td></tr>
+    <tr><td><code>FMySQLParam::MakeDouble(double)</code></td><td>Double</td><td>浮点 / 小数</td></tr>
+    <tr><td><code>FMySQLParam::MakeString(const FString&amp;)</code></td><td>String（UTF-8）</td><td>文本</td></tr>
+    <tr><td><code>FMySQLParam::MakeBlob(const TArray&lt;uint8&gt;&amp;)</code></td><td>Blob</td><td>二进制</td></tr>
+  </tbody>
+</table>
+
+<!-- ========== 7 API ========== -->
+<h2 id="api">7. 主要接口（API）</h2>
+
+<h3 id="api-conn">7.1 FMySQLConnection（单连接 RAII 封装）</h3>
+<p>非线程安全，由连接池保证独占。类型别名 <code>FMySQLConnectionPtr = TSharedPtr&lt;FMySQLConnection, ESPMode::ThreadSafe&gt;</code>。</p>
+<table>
+  <thead><tr><th>方法</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>bool Connect(const FMySQLConnectionConfig&amp;, FString&amp; OutError)</code></td><td>建立连接</td></tr>
+    <tr><td><code>void Close()</code></td><td>关闭连接</td></tr>
+    <tr><td><code>bool IsAlive()</code></td><td><code>mysql_ping</code>，自动重连开启时会重连</td></tr>
+    <tr><td><code>FMySQLResult Execute(const FString&amp; SQL)</code></td><td>直接执行（无参数，谨慎注入）</td></tr>
+    <tr><td><code>FMySQLResult ExecutePrepared(const FString&amp; SQL, const TArray&lt;FMySQLParam&gt;&amp; Params)</code></td><td>预处理执行（防注入）</td></tr>
+    <tr><td><code>FString EscapeString(const FString&amp;) const</code></td><td>兜底转义（建议用预处理替代）</td></tr>
+  </tbody>
+</table>
+
+<h3 id="api-pool">7.2 FMySQLConnectionPool（线程安全连接池）</h3>
+<table>
+  <thead><tr><th>方法</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>bool Initialize(const FMySQLConnectionConfig&amp;, FString&amp; OutError)</code></td><td>立即建立 <code>PoolSize</code> 个连接</td></tr>
+    <tr><td><code>void Shutdown()</code></td><td>释放所有连接</td></tr>
+    <tr><td><code>FMySQLConnectionPtr Acquire(int32 TimeoutMs = 5000)</code></td><td>阻塞借出；≤0 无限等待；超时返回 nullptr</td></tr>
+    <tr><td><code>void Release(FMySQLConnectionPtr)</code></td><td>归还（含存活检测/重建）</td></tr>
+    <tr><td><code>bool IsInitialized()</code> / <code>const FMySQLConnectionConfig&amp; GetConfig()</code></td><td>状态查询</td></tr>
+  </tbody>
+</table>
+<p>RAII 作用域连接 <code>FMySQLScopedConnection</code>：构造借出、析构自动 <code>Release</code>；提供 <code>IsValid()</code>、<code>operator-&gt;()</code>、<code>Get()</code>。</p>
+
+<h3 id="api-exec">7.3 FMySQLAsyncExecutor（异步执行器，推荐入口）</h3>
+<p>类型别名 <code>FMySQLAsyncExecutorPtr</code>，继承 <code>TSharedFromThis&lt;..., ThreadSafe&gt;</code>，<b>必须用 ThreadSafe 智能指针创建</b>。回调委托 <code>FMySQLResultDelegate</code>。</p>
+<table>
+  <thead><tr><th>方法</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td><code>bool Start(const FMySQLConnectionConfig&amp;, FString&amp; OutError)</code></td><td>创建并初始化连接池</td></tr>
+    <tr><td><code>void Stop()</code></td><td>关闭连接池</td></tr>
+    <tr><td><code>bool IsRunning()</code></td><td>池有效且已初始化</td></tr>
+    <tr><td><code>FMySQLConnectionPoolPtr GetPool()</code></td><td>暴露底层池（高级手动借还）</td></tr>
+    <tr><td><code>void ExecuteAsync(const FString&amp; SQL, FMySQLResultDelegate OnComplete)</code></td><td>异步执行（回调在游戏线程）</td></tr>
+    <tr><td><code>void ExecutePreparedAsync(SQL, Params, OnComplete)</code></td><td>异步预处理（回调在游戏线程）</td></tr>
+    <tr><td><code>TFuture&lt;FMySQLResult&gt; ExecutePreparedFuture(SQL, Params)</code></td><td>基于 TFuture（勿在游戏线程阻塞 Get）</td></tr>
+    <tr><td><code>FMySQLResult ExecuteSync(const FString&amp; SQL)</code></td><td>同步阻塞执行</td></tr>
+    <tr><td><code>FMySQLResult ExecutePreparedSync(SQL, Params)</code></td><td>同步预处理</td></tr>
+  </tbody>
+</table>
+
+<!-- ========== 8 使用流程 ========== -->
+<h2 id="usage">8. 使用流程与示例</h2>
+
+<h3 id="usage-init">8.1 初始化与连接池</h3>
+<pre><code>// 必须用 ThreadSafe 模式智能指针（与 TSharedFromThis 一致）
+FMySQLAsyncExecutorPtr DBExecutor = MakeShared&lt;FMySQLAsyncExecutor, ESPMode::ThreadSafe&gt;();
+
+FMySQLConnectionConfig Cfg;
+Cfg.Host = TEXT("127.0.0.1"); Cfg.Port = 3306;
+Cfg.User = TEXT("root"); Cfg.Password = TEXT("123456");
+Cfg.Database = TEXT("game_db"); Cfg.CharsetName = TEXT("utf8mb4");
+Cfg.PoolSize = 4;
+
+FString Err;
+if (!DBExecutor-&gt;Start(Cfg, Err))
+{
+    UE_LOG(LogTemp, Error, TEXT("MySQL 连接池启动失败: %s"), *Err);
+}
+// 析构/退出时调用 DBExecutor-&gt;Stop(); 并 Reset()</code></pre>
+<div class="callout danger"><b>智能指针模式陷阱：</b>因 <code>FMySQLAsyncExecutor</code> 继承 <code>TSharedFromThis&lt;..., ThreadSafe&gt;</code>，必须用 <code>MakeShared&lt;..., ESPMode::ThreadSafe&gt;()</code>。使用默认（NotThreadSafe）模式会触发 <code>static_assert</code> 编译失败。同时应使用 <code>TSharedPtr</code> 而非 <code>TSharedRef</code>（需判空与 <code>Reset()</code>）。</div>
+
+<h3 id="usage-async">8.2 异步查询（回调回游戏线程）</h3>
+<pre><code>// SELECT，结果回调已在游戏线程，可安全操作 UObject/UI
+TArray&lt;FMySQLParam&gt; Params;
+Params.Add(FMySQLParam::MakeString(TEXT("张三")));
+Params.Add(FMySQLParam::MakeInt(18));
+
+DBExecutor-&gt;ExecutePreparedAsync(
+    TEXT("SELECT id,name,city FROM users WHERE name=? AND age&gt;?"),
+    Params,
+    FMySQLResultDelegate::CreateLambda([](const FMySQLResult&amp; R)
+    {
+        if (!R.bSuccess)
+        {
+            UE_LOG(LogTemp, Error, TEXT("查询失败 [%d]: %s"), R.ErrorCode, *R.ErrorMessage);
+            return;
+        }
+        for (const FMySQLRow&amp; Row : R.Rows)
+        {
+            FString Id   = Row.Get(TEXT("id"));
+            FString Name = Row.Get(TEXT("name"));
+            UE_LOG(LogTemp, Display, TEXT("id=%s name=%s"), *Id, *Name);
+        }
+    }));</code></pre>
+
+<h3 id="usage-prep">8.3 预处理参数化（防注入）</h3>
+<pre><code>// INSERT 并取回自增 ID（全部参数化，杜绝拼接 SQL 注入）
+TArray&lt;FMySQLParam&gt; P;
+P.Add(FMySQLParam::MakeString(TEXT("李四")));
+P.Add(FMySQLParam::MakeString(TEXT("北京")));
+P.Add(FMySQLParam::MakeInt(20));
+
+DBExecutor-&gt;ExecutePreparedAsync(
+    TEXT("INSERT INTO users(name,city,age) VALUES(?,?,?)"),
+    P,
+    [](const FMySQLResult&amp; R)
+    {
+        if (R.bSuccess)
+            UE_LOG(LogTemp, Display, TEXT("新记录 ID=%lld"), R.LastInsertId);
+    });</code></pre>
+
+<h3 id="usage-tfuture">8.4 TFuture 用法</h3>
+<pre><code>TFuture&lt;FMySQLResult&gt; Future = DBExecutor-&gt;ExecutePreparedFuture(
+    TEXT("SELECT COUNT(*) AS cnt FROM users"), {});
+
+// 在工作线程中等待，勿在游戏线程直接 .Get() 阻塞
+FMySQLResult R = Future.Get();</code></pre>
+<div class="callout warn"><b>不要在游戏线程阻塞：</b><code>TFuture::Get()</code> 会阻塞当前线程。游戏线程中请使用 <code>ExecutePreparedAsync</code> 回调方式。</div>
+
+<h3 id="usage-sync">8.5 同步用法</h3>
+<p>适合服务端主/工作线程（如 HSHCustomServer 主循环），不会阻塞游戏线程：</p>
+<pre><code>FMySQLResult All = DBExecutor-&gt;ExecuteSync(TEXT("SELECT id,name FROM users ORDER BY id"));
+if (All.bSuccess)
+    for (const FMySQLRow&amp; Row : All.Rows)
+        UE_LOG(LogTemp, Display, TEXT("id=%s name=%s"), *Row.Get(TEXT("id")), *Row.Get(TEXT("name")));</code></pre>
+
+<h3 id="usage-raii">8.6 连接池 RAII 直接用法</h3>
+<pre><code>// 直接使用连接池 + 作用域连接（自动借还）
+FMySQLConnectionPoolPtr Pool = DBExecutor-&gt;GetPool();
+if (Pool &amp;&amp; Pool-&gt;IsInitialized())
+{
+    Pool-&gt;Initialize(Cfg, Err); // 或用已 Start 的执行器池
+    {
+        FMySQLScopedConnection Conn(Pool);
+        if (Conn.IsValid())
+            Conn-&gt;ExecutePrepared(TEXT("UPDATE users SET age=? WHERE id=?"),
+                                  {FMySQLParam::MakeInt(20), FMySQLParam::MakeInt(1)});
+    } // 析构自动归还
+}</code></pre>
+
+<h3 id="usage-tx">8.7 事务与存储过程</h3>
+<div class="callout warn"><b>无事务 API：</b>插件未提供 <code>BeginTransaction/Commit/Rollback</code> 封装。需用原生语句在同一连接连续性上操作：</div>
+<pre><code>// 事务（注意：须在“同一连接”上连续执行，建议用同步接口或手动借连接）
+DBExecutor-&gt;ExecuteSync(TEXT("START TRANSACTION"));
+FMySQLResult R1 = DBExecutor-&gt;ExecutePreparedSync(TransferSQL, P1);
+if (R1.bSuccess)
+    DBExecutor-&gt;ExecuteSync(TEXT("COMMIT"));
+else
+    DBExecutor-&gt;ExecuteSync(TEXT("ROLLBACK"));
+
+// 存储过程（mysql_real_connect 已带 CLIENT_MULTI_STATEMENTS）
+DBExecutor-&gt;ExecuteSync(TEXT("CALL my_proc(1, 2)"));</code></pre>
+<div class="callout"><b>多结果集：</b>当前 <code>ParseStoreResult</code> 仅取第一个结果集；存储过程返回多结果集/OUT 参数需自行扩展。</div>
+
+<h3 id="usage-hsh">8.8 在 HSHCustomServer 中集成</h3>
+<p>服务端控制台程序使用同步接口（主循环中直接执行）。节选自 <code>HSHCustomServer.cpp</code>：</p>
+<pre><code>FMySQLConnectionConfig DbConfig;
+DbConfig.Host = TEXT("127.0.0.1"); DbConfig.Port = 3306;
+DbConfig.User = TEXT("root"); DbConfig.Password = TEXT("root");
+DbConfig.Database = TEXT("test"); DbConfig.PoolSize = 4;
+
+FMySQLAsyncExecutorPtr DbExecutor = MakeShared&lt;FMySQLAsyncExecutor, ESPMode::ThreadSafe&gt;();
+FString DbError;
+if (DbExecutor-&gt;Start(DbConfig, DbError))
+{
+    // ping
+    FMySQLResult Ping = DbExecutor-&gt;ExecutePreparedSync(
+        TEXT("SELECT 1 + ? AS result"), {FMySQLParam::MakeInt(41)});
+    if (Ping.bSuccess &amp;&amp; Ping.Rows.Num() &gt; 0)
+        UE_LOG(LogTemp, Display, TEXT("ping ok, 1+41 = %s"), *Ping.Rows[0].Get(TEXT("result")));
+
+    // 参数化条件查询
+    FMySQLResult CityUsers = DbExecutor-&gt;ExecutePreparedSync(
+        TEXT("SELECT id,name,age FROM uemysql_test_users WHERE city = ? ORDER BY id"),
+        {FMySQLParam::MakeString(TEXT("武当山"))});
+}
+// 退出时：
+DbExecutor-&gt;Stop();
+DbExecutor.Reset();</code></pre>
+
+<h3 id="usage-comexample">8.9 完整示例</h3>
+<pre><code>// Copyright NetGame. All Rights Reserved.
+//
+// HSHCustomServer —— 基于 UE4 源码的自定义服务器程序。
+//
+// 本程序以 Engine/Source/Programs/BlankProgram 为骨架，接入两个位于
+// Engine/Plugins/HSH 下的自研插件：
+//   1) HighCapacityNet —— 高性能并发网络连接（TCP/KCP 服务端，支持 5w+ 连接）
+//   2) UEMySQL         —— 基于 MySQL Connector/C 的数据库连接（连接池 / 预处理防注入）
+//
+// 程序启动后：
+//   - 显式加载两个插件模块；
+//   - 启动 HighCapacityNet 的 TCP 监听（默认 0.0.0.0:7777）；
+//   - 初始化 UEMySQL 连接池，并演示一次同步查询；
+//   - 主循环中每帧驱动 NetConnectionManager::Tick，维持连接与收发。
+//
+// 注意：本程序为无界面（headless）控制台服务，不依赖 World / GameMode，
+// 由 main 函数本身充当“GameMode”角色驱动网络层 Tick。
+
+#include "HSHCustomServer.h"
+
+#include "RequiredProgramMainCPPInclude.h"
+
+#include "Modules/ModuleManager.h"
+
+// HighCapacityNet 插件（底层核心模块）
+#include "NetConnectionManager.h"     // UNetConnectionManager（网络层主入口 UObject）
+
+// UEMySQL 插件（底层核心模块）
+#include "UEMySQLAsyncExecutor.h"     // FMySQLAsyncExecutor（含同步接口）
+
+// 修复 Windows 控制台中文乱码：将控制台代码页切换为 UTF-8（CP=65001）
+// UE4 内部字符串为 UTF-16，默认 GBK(CP936) 控制台输出中文会变问号。
+#include "Windows/MinWindows.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogHSHCustomServer, Log, All);
+
+IMPLEMENT_APPLICATION(HSHCustomServer, "HSHCustomServer");
+
+INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
+{
+	// =========================================================================
+	// 【关键】必须在 PreInit() 之前设置控制台 UTF-8！
+	//
+	// UE4 的 FOutputDeviceStdOutput 构造函数(LaunchEngineLoop.cpp:328)在 PreInit
+	// 内部被执行，它会检测 stdout 是否连接到控制台(IsStdoutAttachedToConsole)
+	// 来决定日志输出路径：
+	//   - bIsConsoleOutput=true  → WriteConsoleW (Unicode/UTF-16 直写，不受代码页影响)
+	//   - bIsConsoleOutput=false → printf(TCHAR_TO_UTF8) (受 _setmode + 控制台代码页影响)
+	// 无论走哪条路径，控制台代码页都必须在 PreInit 之前设为 UTF-8，
+	// 且 SetUTF8Output() 确保 C 运行时 stdout 模式正确。
+	// =========================================================================
+	SetConsoleOutputCP(65001);   // 控制台输出 → UTF-8 代码页
+	SetConsoleCP(65001);         // 控制台输入 → UTF-8 代码页
+
+	// 1) 引擎预初始化：建立 Core / CoreUObject / Engine、模块管理器，
+	//    并自动加载 EnabledByDefault 的引擎插件。
+	GEngineLoop.PreInit(ArgC, ArgV);
+
+	// PreInit 后确保 C 运行时 stdout 为 UTF-8 文本模式
+	// （与 WindowsPlatformMisc::SetUTF8Output 一致：_setmode(stdout, _O_U8TEXT)）
+	FPlatformMisc::SetUTF8Output();
+
+	// 2) 显式加载两个 HSH 插件的“底层核心模块”（初始化内存池 / 网络线程 / 监控，
+	//    以及加载 libmysql.dll）。即便已随 PreInit 自动加载，此处调用也是幂等的。
+	FModuleManager::Get().LoadModuleChecked<IModuleInterface>("HighCapacityNetCore");
+	FModuleManager::Get().LoadModuleChecked<IModuleInterface>("UEMySQLCore");
+
+	UE_LOG(LogHSHCustomServer, Display, TEXT("=================================================="));
+	UE_LOG(LogHSHCustomServer, Display, TEXT(" HSHCustomServer starting..."));
+	UE_LOG(LogHSHCustomServer, Display, TEXT("=================================================="));
+
+	// -------------------------------------------------------------------------
+	// 3) 网络层：启动 HighCapacityNet TCP 服务端
+	// -------------------------------------------------------------------------
+	UNetConnectionManager* NetMgr = UNetConnectionManager::CreateInstance(nullptr);
+	NetMgr->Initialize(ENetServerRole::Standalone);
+
+	// 注册一个示例消息处理器（消息类型 >= 1000 为用户消息）。
+	NetMgr->RegisterMessageHandler(1001, FNetMessageHandler::CreateLambda(
+		[](int32 ConnId, int32 MsgType, TSharedPtr<FPooledBuffer> Data)
+		{
+			UE_LOG(LogHSHCustomServer, Display,
+				TEXT("[Net] recv msgType=%d from conn=%d (%s)"),
+				MsgType, ConnId, Data.IsValid() ? TEXT("has payload") : TEXT("empty"));
+			// 业务示例：在此解析 Data 中的协议，并调用下方 MySQL 接口读写数据库。
+		}));
+
+	const int32 ListenPort = 7777;
+	if (NetMgr->StartTcpServer(TEXT("0.0.0.0"), ListenPort, 10000))
+	{
+		UE_LOG(LogHSHCustomServer, Display, TEXT("[Net] TCP server listening on 0.0.0.0:%d"), ListenPort);
+	}
+	else
+	{
+		UE_LOG(LogHSHCustomServer, Warning, TEXT("[Net] failed to start TCP server on port %d"), ListenPort);
+	}
+
+	// -------------------------------------------------------------------------
+	// 4) 数据库层：初始化 UEMySQL 连接池（使用同步接口，适合服务器主/工作线程）
+	// -------------------------------------------------------------------------
+	FMySQLConnectionConfig DbConfig;
+	DbConfig.Host = TEXT("127.0.0.1");
+	DbConfig.Port = 3306;
+	DbConfig.User = TEXT("root");
+	DbConfig.Password = TEXT("root");
+	DbConfig.Database = TEXT("test");
+	DbConfig.PoolSize = 4;
+
+	// FMySQLAsyncExecutor 继承自 TSharedFromThis<..., ESPMode::ThreadSafe>，
+	// 必须用 ThreadSafe 模式的智能指针（官方别名 FMySQLAsyncExecutorPtr），
+	// 否则 MakeShared 默认 NotThreadSafe 模式会与 TSharedFromThis 模式冲突 → static_assert。
+	// 用 TSharedPtr 而非 TSharedRef：下方退出逻辑需要 if(DbExecutor) 判空与 Reset()，
+	// 二者均为 TSharedPtr 的接口；TSharedRef 永不为空且无 Reset()，会导致编译错误。
+	FMySQLAsyncExecutorPtr DbExecutor = MakeShared<FMySQLAsyncExecutor, ESPMode::ThreadSafe>();
+	FString DbError;
+	if (DbExecutor->Start(DbConfig, DbError))
+	{
+		UE_LOG(LogHSHCustomServer, Display, TEXT("[DB] MySQL connection pool started (pool size=%d)"), DbConfig.PoolSize);
+
+		// ---- 示例 A：ping 验证连通性 ----
+		TArray<FMySQLParam> PingParams;
+		PingParams.Add(FMySQLParam::MakeInt(41));
+		FMySQLResult Ping = DbExecutor->ExecutePreparedSync(TEXT("SELECT 1 + ? AS result"), PingParams);
+
+		if (Ping.bSuccess && Ping.Rows.Num() > 0)
+		{
+			UE_LOG(LogHSHCustomServer, Display, TEXT("[DB] ping ok, 1+41 = %s"), *Ping.Rows[0].Get(TEXT("result")));
+		}
+		else
+		{
+			UE_LOG(LogHSHCustomServer, Warning, TEXT("[DB] ping failed: %s"), *Ping.ErrorMessage);
+		}
+
+
+		// B1) 全量查询：SELECT * FROM users
+		{
+			FMySQLResult AllUsers = DbExecutor->ExecuteSync(TEXT("SELECT id, name, city, age FROM uemysql_test_users ORDER BY id"));
+			if (AllUsers.bSuccess)
+			{
+				UE_LOG(LogHSHCustomServer, Display, TEXT("[DB] === users 全量查询 (%d 条) ==="), AllUsers.Rows.Num());
+				for (const FMySQLRow& Row : AllUsers.Rows)
+				{
+					UE_LOG(LogHSHCustomServer, Display,
+						TEXT("[DB]   id=%s  name=%s  city=%s  age=%s"),
+						*Row.Get(TEXT("id")), *Row.Get(TEXT("name")),
+						*Row.Get(TEXT("city")), *Row.Get(TEXT("age")));
+				}
+			}
+			else
+			{
+				UE_LOG(LogHSHCustomServer, Warning, TEXT("[DB] 全量查询失败: %s"), *AllUsers.ErrorMessage);
+			}
+		}
+
+		// B2) 条件查询（参数化，防 SQL 注入）：按城市查用户
+		{
+			TArray<FMySQLParam> CityParams;
+			CityParams.Add(FMySQLParam::MakeString(TEXT("武当山")));   // 参数化绑定，防注入
+			FMySQLResult CityUsers = DbExecutor->ExecutePreparedSync(
+				TEXT("SELECT id, name, age FROM uemysql_test_users WHERE city = ? ORDER BY id"),
+				CityParams);
+
+			if (CityUsers.bSuccess)
+			{
+				UE_LOG(LogHSHCustomServer, Display,
+					TEXT("[DB] === 城市='武当山' 的用户 (%d 条) ==="), CityUsers.Rows.Num());
+				for (const FMySQLRow& Row : CityUsers.Rows)
+				{
+					UE_LOG(LogHSHCustomServer, Display,
+						TEXT("[DB]   id=%s  name=%s  age=%s"),
+						*Row.Get(TEXT("id")), *Row.Get(TEXT("name")), *Row.Get(TEXT("age")));
+				}
+			}
+			else
+			{
+				UE_LOG(LogHSHCustomServer, Warning, TEXT("[DB] 城市条件查询失败: %s"), *CityUsers.ErrorMessage);
+			}
+		}
+
+		// B3) 聚合统计：各城市的平均年龄
+		{
+			FMySQLResult Stats = DbExecutor->ExecuteSync(
+				TEXT("SELECT city, COUNT(*) AS cnt, AVG(age) AS avg_age FROM uemysql_test_users GROUP BY city ORDER BY cnt DESC"));
+			if (Stats.bSuccess)
+			{
+				UE_LOG(LogHSHCustomServer, Display, TEXT("[DB] === 各城市统计 ==="));
+				for (const FMySQLRow& Row : Stats.Rows)
+				{
+					UE_LOG(LogHSHCustomServer, Display,
+						TEXT("[DB]   city=%s  人数=%s  平均年龄=%s"),
+						*Row.Get(TEXT("city")), *Row.Get(TEXT("cnt")), *Row.Get(TEXT("avg_age")));
+				}
+			}
+		}
+
+		// B4) 更新示例（参数化）：修改已有用户记录的年龄（幂等，可重复运行）
+		{
+			TArray<FMySQLParam> UpdateParams;
+			UpdateParams.Add(FMySQLParam::MakeInt(100));                    // 新年龄
+			UpdateParams.Add(FMySQLParam::MakeString(TEXT("张三")));        // 按姓名定位
+
+			FMySQLResult UpdateRes = DbExecutor->ExecutePreparedSync(
+				TEXT("UPDATE uemysql_test_users SET age = ? WHERE name = ?"),
+				UpdateParams);
+
+			if (UpdateRes.bSuccess)
+			{
+				UE_LOG(LogHSHCustomServer, Display,
+					TEXT("[DB] 更新成功: 张三年龄改为 100, 影响行数=%d"), UpdateRes.AffectedRows);
+
+				// 回查验证
+				FMySQLResult Verify = DbExecutor->ExecutePreparedSync(
+					TEXT("SELECT id, name, city, age FROM uemysql_test_users WHERE name = ?"),
+					{ FMySQLParam::MakeString(TEXT("张三")) });
+				if (Verify.bSuccess && Verify.Rows.Num() > 0)
+				{
+					const FMySQLRow& R = Verify.Rows[0];
+					UE_LOG(LogHSHCustomServer, Display,
+						TEXT("[DB]   回查确认: id=%s name=%s city=%s age=%s"),
+						*R.Get(TEXT("id")), *R.Get(TEXT("name")), *R.Get(TEXT("city")), *R.Get(TEXT("age")));
+				}
+			}
+			else
+			{
+				UE_LOG(LogHSHCustomServer, Warning, TEXT("[DB] 更新失败: %s"), *UpdateRes.ErrorMessage);
+			}
+		}
+	}
+	else
+	{
+		UE_LOG(LogHSHCustomServer, Warning,
+			TEXT("[DB] MySQL pool start failed: %s (确认 MySQL 服务已启动且 libmysql.dll 可用)"), *DbError);
+	}
+
+	UE_LOG(LogHSHCustomServer, Display, TEXT("HSHCustomServer is running. Press Ctrl+C to stop."));
+
+	// -------------------------------------------------------------------------
+	// 5) 主循环：每帧驱动网络层 Tick，并周期性让出 CPU。
+	//    HighCapacityNet 的网络 I/O 与连接管理由自身线程 + 本 Tick 共同完成；
+	//    UEMySQL 同步接口在业务调用处（如消息处理器内）直接执行。
+	// -------------------------------------------------------------------------
+	double LastTime = FPlatformTime::Seconds();
+	while (!IsEngineExitRequested())
+	{
+		const double Now = FPlatformTime::Seconds();
+		const float DeltaTime = (float)(Now - LastTime);
+		LastTime = Now;
+
+		if (NetMgr)
+		{
+			NetMgr->Tick(DeltaTime);
+		}
+
+		FPlatformProcess::Sleep(0.01f); // 约 100Hz 驱动
+	}
+
+	// -------------------------------------------------------------------------
+	// 6) 优雅退出：先停网络监听与连接，再关闭数据库池，最后走引擎退出流程。
+	// -------------------------------------------------------------------------
+	UE_LOG(LogHSHCustomServer, Display, TEXT("HSHCustomServer shutting down..."));
+
+	if (NetMgr)
+	{
+		NetMgr->Shutdown();
+		NetMgr = nullptr;
+	}
+
+	if (DbExecutor)
+	{
+		DbExecutor->Stop();
+		DbExecutor.Reset();
+	}
+
+	FEngineLoop::AppExit();
+	return 0;
+}</code></pre>
+
+
+<!-- ========== 9 编码 ========== -->
+<h2 id="encoding">9. 防中文乱码原理</h2>
+<p>UEMySQL 采用三重防护确保中文与 emoji 不乱码：</p>
+<table>
+  <thead><tr><th>阶段</th><th>措施</th><th>代码位置</th></tr></thead>
+  <tbody>
+    <tr><td>① 连接前协商</td><td><code>mysql_options(..., MYSQL_SET_CHARSET_NAME, "utf8mb4")</code></td><td><code>FMySQLConnection::Connect</code></td></tr>
+    <tr><td>② 连接后 SET NAMES</td><td><code>mysql_set_character_set(conn, "utf8mb4")</code>（等价 SET NAMES）</td><td><code>FMySQLConnection::ApplyCharset</code></td></tr>
+    <tr><td>③ 字节级转换</td><td>FString（UTF-16）↔ UTF-8 字节，绑定参数时转 UTF-8，取回时 UTF-8→TCHAR</td><td>参数绑定 / 结果解析</td></tr>
+  </tbody>
+</table>
+<p>务必保持数据库/表/列的字符集为 <code>utf8mb4</code>，且 <code>FMySQLConnectionConfig::CharsetName</code> 默认即为 <code>utf8mb4</code>。</p>
+
+<!-- ========== 10 FAQ ========== -->
+<h2 id="faq">10. 常见问题排查</h2>
+<table>
+  <thead><tr><th>现象</th><th>原因</th><th>解决</th></tr></thead>
+  <tbody>
+    <tr><td>启动报 <code>libmysql.dll 缺失</code></td><td>DLL 不在搜索路径</td><td>放入 <code>ThirdParty/MySQL/bin</code> 或 .exe 同目录；延迟加载下仅 MySQL 不可用，程序仍启动</td></tr>
+    <tr><td><code>module machine type conflicts</code></td><td>用了 32 位 libmysql</td><td>下载并放置 <b>64 位</b> Connector/C 6.1.11</td></tr>
+    <tr><td>错误码 2003（Can't connect）</td><td>MySQL 服务未启动 / 地址端口错 / 防火墙</td><td>确认 MySQL 运行、端口可达（默认 3306）</td></tr>
+    <tr><td>错误码 1045（Access denied）</td><td>账号/密码/权限错误</td><td>核对 <code>User/Password</code>，必要时 <code>GRANT</code></td></tr>
+    <tr><td>中文乱码（?? 或乱码方块）</td><td>字符集不一致</td><td>确保库/表/连接均为 <code>utf8mb4</code>（见 §9）</td></tr>
+    <tr><td>回调里操作 UObject/UI 崩溃</td><td>在错误线程操作</td><td>使用 <code>ExecuteAsync/ExecutePreparedAsync</code>，回调已在游戏线程；勿用 <code>ExecuteSync</code> 后跨线程访问</td></tr>
+    <tr><td>游戏卡顿</td><td>误用同步查询阻塞游戏线程</td><td>改用异步接口；服务端主线程可用同步</td></tr>
+    <tr><td>Acquire 超时返回 nullptr</td><td>连接池耗尽（全部繁忙）</td><td>提高 <code>PoolSize</code>；或减小单查询耗时；超时阈值由 <code>Acquire(TimeoutMs)</code> 控制（默认 5000ms）</td></tr>
+  </tbody>
+</table>
+
+<!-- ========== 11 限制 ========== -->
+<h2 id="notes">11. 注意事项与已知限制</h2>
+<ul>
+  <li><b>无蓝图节点</b>：当前无任何 <code>BlueprintCallable</code>；所有类为普通 C++ 类。<code>UEMySQL</code> 模块为占位，蓝图暴露为 TODO（见 §12）。</li>
+  <li><b>无 ini 配置</b>：配置只能硬编码在 <code>FMySQLConnectionConfig</code>，无可热更的 ini。</li>
+  <li><b>无事务 API</b>：无 Commit/Rollback 封装，需用原生 <code>START TRANSACTION/COMMIT/ROLLBACK</code>，并注意同一连接连续性。</li>
+  <li><b>无专门存储过程/多结果集 API</b>：<code>ParseStoreResult</code> 只取首个结果集。</li>
+  <li><b>列值统一为 FString</b>：数字/日期/小数需调用方自行解析。</li>
+  <li><b>参数类型有限</b>：仅 Int64/Double/String/Blob（float 用 Double，二进制用 Blob）。</li>
+  <li><b>池不动态扩容</b>：固定 <code>PoolSize</code>，高并发下 <code>Acquire</code> 阻塞至超时（默认 5000ms）。</li>
+  <li><b>无每查询超时</b>：仅有连接获取超时（<code>Acquire</code>），无语句级超时。</li>
+  <li><b>仅 Win64</b>：非 Win64 平台 <code>WITH_UEMYSQL=0</code>，方法返回错误桩。</li>
+  <li><b>单连接非线程安全</b>：不可跨线程共享同一 <code>FMySQLConnection</code> 实例。</li>
+  <li><b>智能指针模式</b>：执行器必须用 <code>ESPMode::ThreadSafe</code> 创建（见 §8.1）。</li>
+</ul>
+
+<!-- ========== 12 蓝图 ========== -->
+<h2 id="bp">12. 蓝图封装（TODO 说明）</h2>
+<p>要在蓝图中使用 UEMySQL，需新建一个 <b>UObject 包装类</b>，为关键方法加上 <code>UFUNCTION(BlueprintCallable)</code> 并依赖 <code>Engine</code> 模块。示意骨架：</p>
+<pre><code>// 在 UEMySQL 模块（或新模块）中，Build.cs 增加 "Engine" 依赖
+UCLASS(BlueprintType)
+class UMySQLBlueprintBridge : public UObject
+{
+    GENERATED_BODY()
+public:
+    UFUNCTION(BlueprintCallable, Category="MySQL")
+    bool Connect(const FString&amp; Host, int32 Port, const FString&amp; User,
+                 const FString&amp; Password, const FString&amp; Database);
+
+    UFUNCTION(BlueprintCallable, Category="MySQL")
+    void ExecuteQuery(const FString&amp; SQL, const TArray&lt;FMySQLParam&gt;&amp; Params);
+    // 回调可用动态多播委托暴露给蓝图
+};</code></pre>
+<p>官方当前未提供该封装层，社区/项目侧可按需实现，建议异步接口回调通过动态委托暴露给蓝图以确保线程安全。</p>
+
+<!-- ========== 13 SQL 用法 ========== -->
+<h2 id="sql">13. 常用 SQL 语句用法</h2>
+<p>本章节汇总在 UEMySQL 下最常用的 SQL 操作范例，均基于前文演示表 <code>uemysql_test_users</code>（字段 <code>id / name / city / age / created_at</code>）。每个示例给出<b>可直接执行的 SQL</b> 与对应的 <b>UEMySQL 调用写法</b>。</p>
+<div class="callout ok"><b>参数化优先原则：</b>凡涉及外部输入或变量值，一律用 <code>ExecutePrepared*</code> + <code>?</code> 占位符（见 §8.3），从根源防止 SQL 注入。<b>表名、列名属于标识符，不能参数化</b>，只能写死或走白名单拼接。DDL（建表/改表）与无变量的语句用 <code>ExecuteSync</code> 直接执行。</div>
+
+<h3 id="sql-create">13.1 建表（CREATE TABLE）</h3>
+<p>DDL 不含可变参数，使用 <code>ExecuteSync</code> 直接执行；务必显式指定 <code>DEFAULT CHARSET=utf8mb4</code> 与 <code>InnoDB</code> 引擎，配合 §9 的三重防乱码机制。</p>
+<pre><code>// 建表示例（DDL，无需参数化）
+const FString CreateSQL = TEXT(R"(
+CREATE TABLE IF NOT EXISTS uemysql_test_users (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(64)  NOT NULL DEFAULT '',
+    city       VARCHAR(128) NOT NULL DEFAULT '',
+    age        INT          NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+)");
+FMySQLResult R = DBExecutor-&gt;ExecuteSync(CreateSQL);
+if (R.bSuccess)
+    UE_LOG(LogTemp, Display, TEXT("建表成功"));
+else
+    UE_LOG(LogTemp, Error, TEXT("建表失败 [%d]: %s"), R.ErrorCode, *R.ErrorMessage);</code></pre>
+<div class="callout"><b>表已存在：</b>生产环境建议用 <code>CREATE TABLE IF NOT EXISTS</code>，避免重复执行报错；或把建表脚本放在部署阶段单独执行，而非每次启动。</div>
+
+<h3 id="sql-insert">13.2 增加数据（INSERT）</h3>
+<p>单行插入用参数化占位符，并通过 <code>FMySQLResult::LastInsertId</code> 取回自增主键。</p>
+<pre><code>// 单行插入（参数化，取回自增 ID）
+TArray&lt;FMySQLParam&gt; P;
+P.Add(FMySQLParam::MakeString(TEXT("王五")));
+P.Add(FMySQLParam::MakeString(TEXT("上海")));
+P.Add(FMySQLParam::MakeInt(25));
+
+DBExecutor-&gt;ExecutePreparedAsync(
+    TEXT("INSERT INTO uemysql_test_users(name, city, age) VALUES(?, ?, ?)"),
+    P,
+    [](const FMySQLResult&amp; R)
+    {
+        if (R.bSuccess)
+            UE_LOG(LogTemp, Display, TEXT("插入成功，自增 ID=%lld"), R.LastInsertId);
+        else
+            UE_LOG(LogTemp, Error, TEXT("插入失败: %s"), *R.ErrorMessage);
+    });</code></pre>
+
+<h3 id="sql-select">13.3 查询数据（SELECT）</h3>
+<p>查询条件一律参数化；结果经回调回游戏线程，按列名逐行取值。数字 / 日期等字段统一以 <code>FString</code> 返回，需调用方自行解析。</p>
+<pre><code>// 条件查询（参数化）；回调在游戏线程
+TArray&lt;FMySQLParam&gt; P;
+P.Add(FMySQLParam::MakeString(TEXT("北京")));
+P.Add(FMySQLParam::MakeInt(18));
+
+DBExecutor-&gt;ExecutePreparedAsync(
+    TEXT("SELECT id, name, city, age FROM uemysql_test_users WHERE city=? AND age &gt; ? ORDER BY id"),
+    P,
+    [](const FMySQLResult&amp; R)
+    {
+        if (!R.bSuccess) { UE_LOG(LogTemp, Error, TEXT("查询失败: %s"), *R.ErrorMessage); return; }
+        for (const FMySQLRow&amp; Row : R.Rows)
+        {
+            int32 Id  = FCString::Atoi(*Row.Get(TEXT("id")));
+            int32 Age = FCString::Atoi(*Row.Get(TEXT("age")));
+            UE_LOG(LogTemp, Display, TEXT("id=%d name=%s city=%s age=%d"),
+                   Id, *Row.Get(TEXT("name")), *Row.Get(TEXT("city")), Age);
+        }
+    });</code></pre>
+<div class="callout"><b>聚合 / 分页 / 批量读取：</b><code>COUNT / SUM / AVG / GROUP BY</code> 写法与普通查询一致（参考 §8.9 的 B3 统计示例）。分页用 <code>... LIMIT ? OFFSET ?</code> 参数化避免拼接页码；按主键集合批量读取用 <code>WHERE id IN (?,?,?)</code>（占位符数量等于 id 个数）。</div>
+
+<h3 id="sql-update">13.4 修改数据（UPDATE）</h3>
+<pre><code>// 按主键更新（参数化）；AffectedRows 为受影响行数
+TArray&lt;FMySQLParam&gt; P;
+P.Add(FMySQLParam::MakeInt(26));                 // 新 age
+P.Add(FMySQLParam::MakeString(TEXT("广州")));    // 新 city
+P.Add(FMySQLParam::MakeInt(1));                  // WHERE id
+
+FMySQLResult R = DBExecutor-&gt;ExecutePreparedSync(
+    TEXT("UPDATE uemysql_test_users SET age=?, city=? WHERE id=?"), P);
+if (R.bSuccess)
+    UE_LOG(LogTemp, Display, TEXT("更新 %d 行"), R.AffectedRows);</code></pre>
+<div class="callout warn"><b>漏写 WHERE：</b>UPDATE 若不带 <code>WHERE</code> 会更新整表，UEMySQL 不会拦截。务必用主键或明确条件定位。</div>
+
+<h3 id="sql-delete">13.5 删除数据（DELETE）</h3>
+<pre><code>// 删除单条（参数化）
+FMySQLResult R = DBExecutor-&gt;ExecutePreparedSync(
+    TEXT("DELETE FROM uemysql_test_users WHERE id=?"),
+    { FMySQLParam::MakeInt(1) });
+if (R.bSuccess)
+    UE_LOG(LogTemp, Display, TEXT("删除 %d 行"), R.AffectedRows);</code></pre>
+<div class="callout warn"><b>误删风险：</b>DELETE 务必带 <code>WHERE</code> 条件，缺条件将清空整表。生产环境建议加软删除列 <code>deleted_at</code>，用 <code>UPDATE ... SET deleted_at=NOW()</code> 替代物理删除，便于恢复与审计。</div>
+
+<h3 id="sql-batch">13.6 批量增删改查</h3>
+<p>UEMySQL 没有原生「批量」API，但可用下列四种模式高效批量操作，按推荐度排序：</p>
+
+<h4>（1）多值 INSERT（推荐：单语句、单结果集、网络往返最少）</h4>
+<pre><code>// 一条预处理语句插入 N 行，参数为「每行字段」平铺
+TArray&lt;FMySQLParam&gt; P;
+P.Add(FMySQLParam::MakeString(TEXT("a"))); P.Add(FMySQLParam::MakeInt(20));
+P.Add(FMySQLParam::MakeString(TEXT("b"))); P.Add(FMySQLParam::MakeInt(21));
+P.Add(FMySQLParam::MakeString(TEXT("c"))); P.Add(FMySQLParam::MakeInt(22));
+
+// ? 占位符总数必须等于 行数×列数 = 3 行 × 2 列 = 6 个
+DBExecutor-&gt;ExecutePreparedSync(
+    TEXT("INSERT INTO uemysql_test_users(name, age) VALUES (?,?),(?,?),(?,?)"), P);</code></pre>
+
+<h4>（2）IN 子句批量更新 / 删除 / 读取</h4>
+<pre><code>// 按主键集合批量删除（IN 占位符数量 = id 个数）
+TArray&lt;FMySQLParam&gt; Ids;
+Ids.Add(FMySQLParam::MakeInt(10));
+Ids.Add(FMySQLParam::MakeInt(11));
+Ids.Add(FMySQLParam::MakeInt(12));
+DBExecutor-&gt;ExecutePreparedSync(
+    TEXT("DELETE FROM uemysql_test_users WHERE id IN (?,?,?)"), Ids);
+
+// 按主键集合批量读取
+DBExecutor-&gt;ExecutePreparedSync(
+    TEXT("SELECT id,name,city FROM uemysql_test_users WHERE id IN (?,?,?)"), Ids);</code></pre>
+
+<h4>（3）循环逐条调用（最简单，适合小批量）</h4>
+<pre><code>// 遍历业务缓存逐条写入；大批量请优先用方式(1)/(4)以减少往返与事务开销
+TArray&lt;FMyUser&gt; Users = GetPendingUsers();
+for (const FMyUser&amp; U : Users)
+{
+    DBExecutor-&gt;ExecutePreparedSync(
+        TEXT("INSERT INTO uemysql_test_users(name, city, age) VALUES(?,?,?)"),
+        { FMySQLParam::MakeString(U.Name),
+          FMySQLParam::MakeString(U.City),
+          FMySQLParam::MakeInt(U.Age) });
+}</code></pre>
+
+<h4>（4）LOAD 大批量（进阶）</h4>
+<p>超大数据量（万级以上）建议导出为 CSV，在数据库侧用 <code>LOAD DATA LOCAL INFILE</code>，比逐行 INSERT 快一个数量级（需服务端开启 <code>local_infile</code>）。UEMySQL 可通过 <code>ExecuteSync</code> 执行该语句。</p>
+
+<h3 id="sql-tx">13.7 事务批量写入（保证一致性）</h3>
+<p>一批写操作需要「全成功或全回滚」时，用事务包裹。两种写法：</p>
+<pre><code>// 方式 A：单条多语句脚本（无外部变量，用 ExecuteSync）
+// 本插件已启用 CLIENT_MULTI_STATEMENTS，多个结果集会被自动排空（见修订说明 2026-07-12）
+DBExecutor-&gt;ExecuteSync(TEXT(R"(
+START TRANSACTION;
+INSERT INTO uemysql_test_users(name, city, age) VALUES('批量1','北京',30);
+INSERT INTO uemysql_test_users(name, city, age) VALUES('批量2','北京',31);
+COMMIT;
+)"));
+
+// 方式 B：参数化写入 + 手动事务（推荐，同一连接连续性）
+DBExecutor-&gt;ExecuteSync(TEXT("START TRANSACTION"));
+bool bOk = true;
+for (const FMyUser&amp; U : GetPendingUsers())
+{
+    FMySQLResult R = DBExecutor-&gt;ExecutePreparedSync(
+        TEXT("INSERT INTO uemysql_test_users(name, city, age) VALUES(?,?,?)"),
+        { FMySQLParam::MakeString(U.Name),
+          FMySQLParam::MakeString(U.City),
+          FMySQLParam::MakeInt(U.Age) });
+    if (!R.bSuccess) { bOk = false; break; }
+}
+DBExecutor-&gt;ExecuteSync(bOk ? TEXT("COMMIT") : TEXT("ROLLBACK"));</code></pre>
+<div class="callout warn"><b>同一连接连续性：</b>事务内所有语句必须落在<b>同一个</b> <code>FMySQLConnection</code> 上。连接池的每次 <code>ExecuteSync / ExecuteAsync</code> 都可能借到不同连接，使事务失效。正确做法是通过 <code>FMySQLScopedConnection</code>（§8.6）锁定单连接，再在其上执行 <code>START TRANSACTION / 写入 / COMMIT|ROLLBACK</code>。</div>
+
+<div style="margin:24px 0;padding:16px 18px;border:1px solid #f5a623;border-left:4px solid #f5a623;border-radius:8px;background:rgba(245,166,35,0.08);">
+  <strong>修订说明（源码同步 · 2026-07-12）</strong>：本手册核对源码后，对插件源码做了如下修正与优化，文档内容与此保持一致：
+  <ol style="margin:8px 0 0;padding-left:20px;">
+    <li><b>修正头文件示例</b>：<code>UEMySQLAsyncExecutor</code> 头文件示例代码原为 <code>MakeShared&lt;FMySQLAsyncExecutor&gt;()</code>，已修正为 <code>MakeShared&lt;FMySQLAsyncExecutor, ESPMode::ThreadSafe&gt;()</code>。该类继承自 <code>TSharedFromThis&lt;..., ESPMode::ThreadSafe&gt;</code>，漏写 <code>ESPMode::ThreadSafe</code> 会在运行期触发 <code>AsShared()</code> 断言失败（见 8.1 与注意事项）。</li>
+    <li><b>优化多结果集处理</b>：<code>FMySQLConnection::Execute</code> 在连接启用 <code>CLIENT_MULTI_STATEMENTS</code> 时，原先仅消费第一个结果集，未排空后续结果集（存储过程 / 批量语句会产生多个结果集），会导致后续查询报 <code>Commands out of sync</code> 而损坏连接。已新增 <code>DrainRemainingResults()</code> 排空全部结果集（数据丢弃，仅维持协议同步）。</li>
+  </ol>
+</div>
+
+<p class="muted" style="margin-top:40px;border-top:1px solid var(--border);padding-top:14px;">
+  本文档基于 HSHCustomServer 项目中 UEMySQL 插件实际源码（<code>Engine/Plugins/HSH/UEMySQL</code>）编写 · 生成于 2026-07-12
+</p>
+</main>
+</div>
+<button class="topbtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">↑</button>
+<script>
+(function(){
+  const links = Array.from(document.querySelectorAll('nav.sidebar a'));
+  const map = {};
+  links.forEach(a=>{ const id=a.getAttribute('href').slice(1); const el=document.getElementById(id); if(el) map[id]=a; });
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        const a = map[e.target.id]; if(a) a.classList.add('active');
+      }
+    });
+  }, {rootMargin:'-10% 0px -80% 0px', threshold:0});
+  Object.keys(map).forEach(id=>obs.observe(document.getElementById(id)));
+})();
+</script>
+</body>
+</html>

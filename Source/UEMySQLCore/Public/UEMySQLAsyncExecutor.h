@@ -17,7 +17,7 @@ DECLARE_DELEGATE_OneParam(FMySQLResultDelegate, const FMySQLResult&);
  *
  * 典型用法（C++）：
  *   FMySQLConnectionConfig Cfg; Cfg.Host = ...; Cfg.Database = ...;
- *   auto Exec = MakeShared<FMySQLAsyncExecutor>();
+ *   auto Exec = MakeShared<FMySQLAsyncExecutor, ESPMode::ThreadSafe>();
  *   FString Err;
  *   Exec->Start(Cfg, Err);
  *

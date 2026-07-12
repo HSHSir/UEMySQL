@@ -224,10 +224,46 @@ FMySQLResult FMySQLConnection::Execute(const FString& SQL)
 
 	// 判断是否有结果集（ParseStoreResult 内部会调用 mysql_store_result 并负责释放）
 	Result = ParseStoreResult();
+
+	// 多结果集排空：CLIENT_MULTI_STATEMENTS 下存储过程/批量语句可能产生多个结果集，
+	// 必须全部消费，否则后续查询会报 "Commands out of sync" 使连接损坏。
+	DrainRemainingResults(Result);
 #else
 	Result.ErrorMessage = TEXT("UEMySQL 未启用。");
 #endif
 	return Result;
+}
+
+void FMySQLConnection::DrainRemainingResults(FMySQLResult& Result)
+{
+#if WITH_UEMYSQL
+	if (!Connection) return;
+
+	int NextStatus = 0;
+	// mysql_next_result 返回：0=还有结果集；-1=没有更多；>0=出错
+	while ((NextStatus = mysql_next_result(Connection)) == 0)
+	{
+		// 读取并立即释放后续结果集（数据丢弃，仅维持协议同步）
+		MYSQL_RES* Extra = mysql_store_result(Connection);
+		if (Extra)
+		{
+			mysql_free_result(Extra);
+		}
+		// 若 Extra 为空且 field_count>0 说明该结果集出错，但继续推进以避免连接锁死
+	}
+
+	if (NextStatus > 0)
+	{
+		// 排空过程出现错误，覆盖错误信息（首个结果集的成功状态不再可信）
+		Result.bSuccess = false;
+		Result.ErrorCode = static_cast<int32>(mysql_errno(Connection));
+		Result.ErrorMessage = UTF8_TO_TCHAR(mysql_error(Connection));
+		UE_LOG(LogUEMySQL, Error, TEXT("Execute 多结果集排空失败 [%d]: %s"),
+			Result.ErrorCode, *Result.ErrorMessage);
+	}
+#else
+	(void)Result;
+#endif
 }
 
 FMySQLResult FMySQLConnection::ParseStoreResult()
